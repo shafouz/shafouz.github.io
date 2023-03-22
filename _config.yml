@@ -33,7 +33,7 @@ plugins:
   - jekyll-seo-tag
   - jekyll-remote-theme
 
-theme: minima
+remote_theme: jekyll/minima
 minima:
   skin: solarized
   social_links:
