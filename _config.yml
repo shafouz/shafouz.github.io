@@ -20,6 +20,7 @@
 
 domain: shafouz.github.io
 url: https://shafouz.github.io  
+baseUrl: /
 
 title: shafouz blog
 author:
