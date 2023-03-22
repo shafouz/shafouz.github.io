@@ -37,3 +37,5 @@ gem "jekyll-gist", "~> 1.5"
 gem "jekyll-compose", "~> 0.12.0"
 
 gem "jekyll-remote-theme", "~> 0.4.3"
+
+gem "webrick", "~> 1.8"
