@@ -34,7 +34,7 @@ gem "http_parser.rb", "~> 0.6.0", :platforms => [:jruby]
 
 gem "jekyll-gist", "~> 1.5"
 
-gem "jekyll-compose", "~> 0.12.0"
+gem 'jekyll-compose', group: [:jekyll_plugins]
 
 gem "jekyll-remote-theme", "~> 0.4.3"
 

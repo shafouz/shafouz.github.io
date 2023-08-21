@@ -2,7 +2,6 @@
 layout: post
 title:  "Solving pwnable's - orw - 2/???"
 date:   2023-01-11 11:00:34 -0400
-categories: writeup ctf pwn assembly x86 pwnable.tw
 ---
 
 [https://pwnable.tw](https://pwnable.tw/)
