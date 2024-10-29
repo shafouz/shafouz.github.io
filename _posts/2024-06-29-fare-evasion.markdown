@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "fare-evasion - UIUCTF 2024"
-date:   2024-07-21 00:00:00 -0400
+date:   2024-06-29 00:00:00 -0400
 ---
 
 https://ctftime.org/event/2275
