@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "one day one letter - wanictf 2024"
-date:   2024-06-29 00:00:00 -0400
+date:   2024-06-23 00:00:00 -0400
 ---
 
 https://ctftime.org/event/2377
