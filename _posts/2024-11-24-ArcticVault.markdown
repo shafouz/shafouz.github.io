@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "ArcticVault - GlacierCTF 2024"
-date:   2024-11-10 00:00:00 -0400
+date:   2024-11-24 00:00:00 -0400
 ---
 
 https://ctftime.org/event/2402
