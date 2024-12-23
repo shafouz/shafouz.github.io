@@ -4,6 +4,7 @@ title:  "sandevistan - Blue Water CTF 2024"
 date:   2024-10-13 00:00:00 -0400
 ---
 
+{% raw %}
 https://ctftime.org/event/2479
 
 # Sandevistan (Web)
@@ -58,3 +59,4 @@ res = requests.get(
 `bwctf{YoU_kNoW_yOu_d1dnt_l0s3_Ur_53Lf-coNtR0L._LEt'5_start_at_the_r4inB0w}`
 
 shafouz - 2024/10/13
+{% endraw %}

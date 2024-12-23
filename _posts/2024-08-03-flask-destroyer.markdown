@@ -4,6 +4,8 @@ title:  "flask destroyer - TFCCTF 2024"
 date:   2024-08-03 00:00:00 -0400
 ---
 
+{% raw %}
+
 https://ctftime.org/event/2423
 
 # flask-destroyer (web)
@@ -77,3 +79,5 @@ get()
 `TFCCTF{Cr4Sh_g0_bRbRbRbRbR}`
 
 shafouz 2024/08/03
+
+{% endraw %}
