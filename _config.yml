@@ -20,28 +20,27 @@
 
 domain: shafouz.github.io
 url: https://shafouz.github.io  
+baseUrl: /shafouz.github.io
 
 title: shafouz blog
 author:
   name: "shafouz"
   email: "jlmacedomatos@gmail.com"
 
-# Build settings
 plugins:
   - jekyll-feed
   - jekyll-gist
   - jekyll-seo-tag
   - jekyll-remote-theme
 
-theme: minima
+remote_theme: jekyll/minima
 minima:
-  skin: solarized
+  skin: classic 
   social_links:
     - { platform: hackerone, user_url: "https://hackerone.com/shafou" }
     - { platform: github,  user_url: "https://github.com/shafouz" }
     - { platform: twitter, user_url: "https://twitter.com/shafouzzzzzz" }
-    - { platform: linkedin, user_url: "https://www.linkedin.com/in/jo%C3%A3o-luca-m-b90065124/" }
-
+    - { platform: linkedin, user_url: "https://www.linkedin.com/in/joao-luca/" }
 
 header_pages:
   - posts.markdown
