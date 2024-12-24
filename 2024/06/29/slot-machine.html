@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>slot machine - UIUCTF 2024 | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="slot machine - UIUCTF 2024" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="https://ctftime.org/event/2275" />
+<meta property="og:description" content="https://ctftime.org/event/2275" />
+<link rel="canonical" href="https://shafouz.github.io/2024/06/29/slot-machine.html" />
+<meta property="og:url" content="https://shafouz.github.io/2024/06/29/slot-machine.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-06-29T04:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="slot machine - UIUCTF 2024" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2024-06-29T04:00:00+00:00","datePublished":"2024-06-29T04:00:00+00:00","description":"https://ctftime.org/event/2275","headline":"slot machine - UIUCTF 2024","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2024/06/29/slot-machine.html"},"url":"https://shafouz.github.io/2024/06/29/slot-machine.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">slot machine - UIUCTF 2024</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-06-29T04:00:00+00:00" itemprop="datePublished">
+        Jun 29, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>https://ctftime.org/event/2275</p>
+
+<h1 id="slot-machine-misc">slot-machine (misc)</h1>
+
+<p>hash with a lot of zeroes</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>the challenge let you choose a hash and a length
+if you win you get length bytes of the flag
+winning here is just satisfying <code class="language-plaintext highlighter-rouge">len(set(hash[:length])) == 1:</code>
+so we need a hash with a lot of repeated bytes
+then we google bitcoin lowest block number and manually get the hash from it</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+
+<span class="n">block</span><span class="o">=</span><span class="p">{}</span>
+
+<span class="c1">#inputs values (from https://www.blockchain.com/explorer/blocks/btc/756951)
+</span><span class="n">block</span><span class="p">[</span><span class="s">'blocknumber'</span><span class="p">]</span><span class="o">=</span><span class="mi">756951</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'version'</span><span class="p">]</span><span class="o">=</span><span class="s">'20400000'</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'hashPrevBlock'</span><span class="p">]</span><span class="o">=</span><span class="s">'000000000000000000050da0da9451c2e1306db4ddb5acc965fc1016678d9154'</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'hashMerkleRoot'</span><span class="p">]</span><span class="o">=</span><span class="s">'62c46f1efadf6e39b7463e5362bb552cba98f74a80a58378ff5194c7b058005a'</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'time'</span><span class="p">]</span><span class="o">=</span><span class="mi">1664846893</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'bits'</span><span class="p">]</span><span class="o">=</span><span class="mi">386464174</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'nonce'</span><span class="p">]</span><span class="o">=</span><span class="mi">3240300428</span>
+
+<span class="c1">#prepare values
+</span><span class="n">block</span><span class="p">[</span><span class="s">'versionprepared'</span><span class="p">]</span><span class="o">=</span><span class="nb">bytes</span><span class="p">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="s">'version'</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="nb">hex</span><span class="p">()</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'hashPrevBlockprepared'</span><span class="p">]</span><span class="o">=</span><span class="nb">bytes</span><span class="p">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="s">'hashPrevBlock'</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="nb">hex</span><span class="p">()</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'hashMerkleRootprepared'</span><span class="p">]</span><span class="o">=</span><span class="nb">bytes</span><span class="p">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="s">'hashMerkleRoot'</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="nb">hex</span><span class="p">()</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'timeprepared'</span><span class="p">]</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="s">'time'</span><span class="p">]).</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s">'little'</span><span class="p">).</span><span class="nb">hex</span><span class="p">()</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'bitsprepared'</span><span class="p">]</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="s">'bits'</span><span class="p">]).</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s">'little'</span><span class="p">).</span><span class="nb">hex</span><span class="p">()</span>
+<span class="n">block</span><span class="p">[</span><span class="s">'nonceprepared'</span><span class="p">]</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="s">'nonce'</span><span class="p">]).</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s">'little'</span><span class="p">).</span><span class="nb">hex</span><span class="p">()</span>
+
+<span class="c1">#concatentate prepared values to create input to double sha256 hash function
+</span><span class="n">block</span><span class="p">[</span><span class="s">'hashinput'</span><span class="p">]</span><span class="o">=</span><span class="n">block</span><span class="p">[</span><span class="s">'versionprepared'</span><span class="p">]</span> <span class="o">+</span> <span class="n">block</span><span class="p">[</span><span class="s">'hashPrevBlockprepared'</span><span class="p">]</span> <span class="o">+</span> <span class="n">block</span><span class="p">[</span><span class="s">'hashMerkleRootprepared'</span><span class="p">]</span> <span class="o">+</span> <span class="n">block</span><span class="p">[</span><span class="s">'timeprepared'</span><span class="p">]</span> <span class="o">+</span> <span class="n">block</span><span class="p">[</span><span class="s">'bitsprepared'</span><span class="p">]</span> <span class="o">+</span> <span class="n">block</span><span class="p">[</span><span class="s">'nonceprepared'</span><span class="p">]</span>
+
+<span class="c1">#double sha256 hash
+</span><span class="n">d1</span> <span class="o">=</span> <span class="n">hashlib</span><span class="p">.</span><span class="n">sha256</span><span class="p">(</span><span class="nb">bytes</span><span class="p">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="s">'hashinput'</span><span class="p">])).</span><span class="n">digest</span><span class="p">()</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">d1</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="nb">hex</span><span class="p">())</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"slot-machine.chal.uiuc.tf"</span><span class="p">,</span> <span class="mi">1337</span><span class="p">,</span> <span class="n">ssl</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="s">"93ccd10e30712e566e0bc0189c791e609b11fc17190b00eb50d6fa8b4909b2f5"</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="s">"24"</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">uiuctf{keep_going!_3cyd}</code></p>
+
+<p>shafouz 2024/06/30</p>
+
+  </div><a class="u-url" href="/2024/06/29/slot-machine.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

