@@ -12,11 +12,6 @@ jobs:
       - name: 📂 setup
         uses: actions/checkout@v2
 
-        # include the lines below if you are using jekyll-last-modified-at
-        # or if you would otherwise need to fetch the full commit history
-        # however this may be very slow for large repositories!
-        # with:
-        # fetch-depth: '0'
       - name: 💎 setup ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -34,4 +29,4 @@ jobs:
           publish_dir: ./_site
           # if the repo you are deploying to is <username>.github.io, uncomment the line below.
           # if you are including the line below, make sure your source files are NOT in the "main" branch:
-          # publish_branch: main
+          publish_branch: main
