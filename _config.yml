@@ -45,3 +45,5 @@ minima:
 header_pages:
   - posts.markdown
   - about.markdown
+
+google_analytics: G-F6L4J94HSJ
