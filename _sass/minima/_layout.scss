@@ -1,3 +1,21 @@
+.site-header > .wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.title-container {
+  flex: 0 1 auto; /* Keeps the title aligned to the left */
+}
+
+.icons-container {
+  display: flex;
+  margin-left: auto;
+  gap: 15px;
+  justify-content: flex-end;
+}
+
 /**
  * Site header
  */
