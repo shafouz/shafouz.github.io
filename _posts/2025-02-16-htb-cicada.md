@@ -1,7 +1,7 @@
 ---
 layout: post
 title: HTB - Cicada
-date: 2025-01-22 13:02 -0400
+date: 2025-02-16 09:02 -0400
 ---
 
 ![image](/assets/img/cicada.png)
