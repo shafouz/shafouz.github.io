@@ -19,9 +19,10 @@ module Jekyll
       }
 
       begin
-        return root_url + JSON.parse(res.body)['info']['avatar']
+        url = root_url + JSON.parse(res.body)['info']['avatar']
+        return "<img src='#{url}' class='avatar'>"
       rescue Exception
-        return 'https://labs.hackthebox.com/storage/avatars/fb2d9f98400e3c802a0d7145e125c4ff.png'
+        return "<img src='https://labs.hackthebox.com/storage/avatars/fb2d9f98400e3c802a0d7145e125c4ff.png' class='avatar'>"
       end
     end
   end
