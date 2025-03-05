@@ -2,16 +2,12 @@
 layout: post
 title:  "flask destroyer - TFCCTF 2024"
 date:   2024-08-03 00:00:00 -0400
+render_with_liquid: false
 ---
 
-{% raw %}
-
-https://ctftime.org/event/2423
+[TFCCTF 2024](https://ctftime.org/event/2423)
 
 # flask-destroyer (web)
-
-flask sqli
-
 ## Solution
 
 There is an sqli on login, and `secure_file_priv = ""`.
@@ -79,5 +75,3 @@ get()
 `TFCCTF{Cr4Sh_g0_bRbRbRbRbR}`
 
 shafouz 2024/08/03
-
-{% endraw %}
