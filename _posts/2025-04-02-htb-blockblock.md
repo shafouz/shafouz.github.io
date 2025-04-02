@@ -67,10 +67,10 @@ data = {"username": payload}
 response = requests.post(url, json=data, headers=headers, cookies={"token": t})
 ```
 
-After that we check the admin dashboard. And find out how the auth works by accident.
+After that we check the admin dashboard and find out how the auth works by accident.
 ![burp blockchain rpc3](/assets/img/blockblock1.png)
 
-You then add that token to the http header `token: <token>`
+You can then add that token to the http header `token: <token>`
 
 We can now check every transaction and look for the admin password.
 ```python
