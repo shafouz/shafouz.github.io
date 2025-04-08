@@ -30,17 +30,12 @@ Nmap done: 1 IP address (1 host up) scanned in 13.39 seconds
 ## main page
 ![panda.htb](/assets/img/pandora1.png)
 
-- default apache 404 page
-![panda.htb](/assets/img/pandora2.png)
-
-emails:
+Some emails and domains on the page body:
 - support@panda.htb
 - contact@panda.htb
-
-domains
 - Panda.HTB
 
-subdomain bruteforce shows nothing.
+subdomain bruteforce gives nothing.
 ```bash
 ~/workspace/projects/htb/pandora » ffuf -u http://$(cat ip.txt)/ -H 'Host: FUZZ.panda.htb' -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -ac
 
@@ -68,9 +63,10 @@ ________________________________________________
 :: Progress: [4990/4990] :: Job [1/1] :: 100 req/sec :: Duration: [0:00:51] :: Errors: 0 ::
 ```
 
-Contact seems to be the only feature that works. Looks a lot like xss but it isn't working.
+Contact seems to be the only feature that works.
+Looks a lot like xss but it isn't working.
 Directory listings are enabled but there is nothing interesting in it.
-Next step is looking through the js files. Also nothing.
+Nothing in the js files also.
 
 Time to check udp.
 
@@ -120,21 +116,23 @@ matt:x:1000:1000:matt:/home/matt:/bin/bash
 daniel:x:1001:1001::/home/daniel:/bin/bash
 ```
 
-```bash
-matt@pandora:/tmp/tmp.44zbQs0ont# cat ~/user.txt
-a162c***************************
-```
-
 So matt is probably our next target.
 
 Interesting files on `/var/www/pandora/pandora_console/`.
-![pandora console](/assets/img/pandora3.png)
+![pandora console](/assets/img/pandora4.png)
 
 Seems to be using [pandorafms](https://github.com/pandorafms/pandorafms.git) from the Dockerfile.
 
 Looks like there is an RCE with a public poc. [POC](https://www.exploit-db.com/exploits/50961). Doesn't seem to work.
 
 This second one does. [POC1](https://github.com/shyam0904a/Pandora_v7.0NG.742_exploit_unauthenticated)
+
+This is both a RCE and a SQLi, that gives us the user flag.
+
+```bash
+matt@pandora:/tmp/tmp.44zbQs0ont# cat ~/user.txt
+a162c***************************
+```
 
 Will try to bruteforce the hashes just in case matt's password is needed.
 ```bash
@@ -144,7 +142,7 @@ Will try to bruteforce the hashes just in case matt's password is needed.
 ```
 
 Nothing on crackstation.
-![crackstation](/assets/img/pandora6.png)
+![crackstation](/assets/img/pandora7.png)
 
 Nothing on hashcat either.
 
@@ -155,8 +153,8 @@ There is an interesting suid binary.
 
 At first I thought I needed matt's password to run with sudo, but that is not the case.
 
-Looking at ghidra we can see a `setreuid` call. That makes so matt keeps the root privilege when running normally.
-![ghidra bin](/assets/img/pandora8.png)
+Looking at ghidra we can see a `setreuid` call. That makes so matt keeps the root privilege when running without sudo.
+![ghidra bin](/assets/img/pandora9.png)
 
 And the actual bug is on `system()`. It doesn't specify a path so we can just change PATH to any script called tar.
 ```bash
