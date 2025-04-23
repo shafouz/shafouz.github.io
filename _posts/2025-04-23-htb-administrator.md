@@ -1,7 +1,7 @@
 ---
 layout: post
 title: HTB - administrator
-date: 2025-04-23 17:53 -0400
+date: 2025-04-23 10:00 -0400
 ---
 
 {{ 'administrator' | get_machine_avatar | raw }}
