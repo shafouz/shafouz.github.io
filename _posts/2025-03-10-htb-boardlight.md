@@ -4,7 +4,7 @@ title: HTB - boardlight
 date: 2025-03-10 08:56 -0400
 ---
 
-{{ 'boardlight' | get_machine_avatar | raw }}
+{{ 'boardlight' | machine_img }}
 
 ## nmap
 ```nmap

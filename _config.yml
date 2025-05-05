@@ -36,11 +36,12 @@ plugins:
 remote_theme: jekyll/minima
 minima:
   skin: classic 
-  social_links:
-    - { platform: linkedin, user_url: "https://www.linkedin.com/in/joao-luca/" }
-    - { platform: hackerone, user_url: "https://hackerone.com/shafou" }
-    - { platform: github,  user_url: "https://github.com/shafouz" }
-    - { platform: twitter, user_url: "https://twitter.com/shafouzzzzzz" }
+
+social_links:
+  - { social: "HackerOne", icon: "fa-solid fa-bug", user_url: "https://hackerone.com/shafou" }
+  - { social: "Github", icon: "fab fa-github",  user_url: "https://github.com/shafouz" }
+  - { social: "Twitter", icon: "fab fa-twitter", user_url: "https://twitter.com/shafouzzzzzz" }
+  - { social: "LinkedIn", icon: "fab fa-linkedin", user_url: "https://www.linkedin.com/in/joao-luca/" }
 
 header_pages:
   - posts.markdown

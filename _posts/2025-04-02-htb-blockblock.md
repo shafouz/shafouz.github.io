@@ -4,7 +4,7 @@ title: HTB - blockblock
 date: 2025-04-02 09:03 -0400
 ---
 
-{{ 'blockblock' | get_machine_avatar | raw }}
+{{ 'blockblock' | machine_img }}
 
 ## nmap
 ```bash

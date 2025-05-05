@@ -4,7 +4,7 @@ title: HTB - builder
 date: 2025-03-04 18:42 -0400
 ---
 
-{{ 'builder' | get_machine_avatar | raw }}
+{{ 'builder' | machine_img }}
 
 # jenkins
 ## nmap

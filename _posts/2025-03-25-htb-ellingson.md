@@ -4,7 +4,7 @@ title: HTB - Ellingson
 date: 2025-03-25 08:53 -0400
 ---
 
-{{ 'ellingson' | get_machine_avatar | raw }}
+{{ 'ellingson' | machine_img }}
 
 # nmap
 

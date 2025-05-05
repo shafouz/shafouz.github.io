@@ -4,7 +4,7 @@ title: HTB - pandora
 date: 2025-04-09 09:00 -0400
 ---
 
-{{ 'pandora' | get_machine_avatar | raw }}
+{{ 'pandora' | machine_img }}
 
 ## nmap
 ```bash

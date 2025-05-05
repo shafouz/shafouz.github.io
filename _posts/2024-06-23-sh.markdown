@@ -20,9 +20,9 @@ r.sendline(f"0\t|| 1")
 r.interactive()
 ```
 
-- 0 to pass the grep check
-- \t to trick printf, not fully sure how it works but i saw in some testcase on busybox
-- || 1 to make test always true
+- `0` to pass the grep check
+- `\t` to trick printf, not fully sure how it works but i saw in some testcase on busybox
+- `|| 1` to make test always true
 
 ## Flag
 `FLAG{use_she11check_0r_7he_unexpec7ed_h4ppens}`
