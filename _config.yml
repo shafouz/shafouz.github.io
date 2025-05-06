@@ -25,7 +25,6 @@ baseUrl: /
 title: shafouz blog
 author:
   name: "shafouz"
-  email: "jlmacedomatos@gmail.com"
 
 plugins:
   - jekyll-feed
@@ -35,13 +34,14 @@ plugins:
 
 remote_theme: jekyll/minima
 minima:
-  skin: classic 
+  skin: dark 
 
 social_links:
   - { social: "HackerOne", icon: "fa-solid fa-bug", user_url: "https://hackerone.com/shafou" }
   - { social: "Github", icon: "fab fa-github",  user_url: "https://github.com/shafouz" }
   - { social: "Twitter", icon: "fab fa-twitter", user_url: "https://twitter.com/shafouzzzzzz" }
   - { social: "LinkedIn", icon: "fab fa-linkedin", user_url: "https://www.linkedin.com/in/joao-luca/" }
+  - { social: "Email", icon: "fa-solid fa-envelope", user_url: "mailto:jlmacedomatos@gmail.com" }
 
 header_pages:
   - posts.markdown

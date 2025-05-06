@@ -38,28 +38,29 @@ h3 {
   max-width: calc(#{$content-width} + (#{$spacing-unit}) + 6.25rem);
 }
 
-/* a { */
-/*   color: #111111; */
-/*   text-decoration: none; */
-/**/
-/*   &:visited { */
-/*     color: #111111; */
-/*   } */
-/**/
-/*   &:hover { */
-/*     color: #111111; */
-/*     text-decoration: underline; */
-/*     text-decoration-color: grey; */
-/*   } */
-/**/
-/*   .social-media-list &:hover { */
-/*     text-decoration: none; */
-/**/
-/*     .username { */
-/*       text-decoration: underline; */
-/*     } */
-/*   } */
-/* } */
+$link-color: #efefea;
+a {
+  color: $link-color;
+  text-decoration: none;
+
+  &:visited {
+    color: $link-color;
+  }
+
+  &:hover {
+    color: $link-color;
+    text-decoration: underline;
+    text-decoration-color: grey;
+  }
+
+  .social-media-list &:hover {
+    text-decoration: none;
+
+    .username {
+      text-decoration: underline;
+    }
+  }
+}
 
 .navbar {
   display: flex;
@@ -84,6 +85,7 @@ h3 {
 }
 
 .nav-item {
+  font-size: 1.25rem;
   display: flex;
   align-items: center;
 	line-height: 1.5;

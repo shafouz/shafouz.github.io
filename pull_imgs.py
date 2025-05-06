@@ -5,6 +5,8 @@ import os
 import glob
 import shutil
 
+assert False, "Fix this so you don't leak stuff"
+
 HTB_PATH = "/home/shafou/workspace/projects/htb/"
 
 pngs = glob.glob(f"{HTB_PATH}/**/imgs/*.png", recursive=True)
