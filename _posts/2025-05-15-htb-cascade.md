@@ -4,6 +4,8 @@ title: HTB - cascade
 date: 2025-05-15 09:45 -0400
 ---
 
+{{ 'cascade' | machine_img }}
+
 ```bash
 Starting Nmap 7.93 ( https://nmap.org ) at 2025-05-06 09:35 -04
 Nmap scan report for 10.10.10.182
