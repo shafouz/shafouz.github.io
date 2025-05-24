@@ -5,6 +5,10 @@ require 'uri'
 module Jekyll
   module AssetFilter
     def get_machine_avatar(machine_name)
+      if ENV['ENV'] == 'dev'
+        return "https://labs.hackthebox.com/storage/avatars/fb2d9f98400e3c802a0d7145e125c4ff.png"
+      end
+
       if machine_name.start_with? "HTB - "
         machine_name = machine_name.split("HTB - ")[1]
       end

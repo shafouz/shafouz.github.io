@@ -38,3 +38,5 @@ gem 'jekyll-compose', group: [:jekyll_plugins]
 gem "jekyll-remote-theme", "~> 0.4.3"
 
 gem "webrick", "~> 1.8"
+
+gem "faraday-retry", "~> 2.3"
