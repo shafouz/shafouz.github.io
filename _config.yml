@@ -18,8 +18,8 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-domain: shafouz.github.io
-url: https://shafouz.github.io  
+domain: sha.fouz.com.br
+url: https://sha.fouz.com.br
 baseUrl: /
 
 title: shafouz blog
@@ -29,6 +29,7 @@ author:
 plugins:
   - jekyll-feed
   - jekyll-gist
+  - jekyll-sitemap
   - jekyll-seo-tag
   - jekyll-remote-theme
 
