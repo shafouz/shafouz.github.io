@@ -21,7 +21,7 @@ def sync():
 
 def run():
     subprocess.run(
-        "ENV=dev bundle exec jekyll server baseurl='' --drafts --force_polling -w --limit_posts 5",
+        "bundle exec jekyll server baseurl='' --drafts --force_polling -w --limit_posts 3",
         shell=True,
     )
 
