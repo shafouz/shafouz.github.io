@@ -14,18 +14,24 @@
       <div class="navbar-end">
         {%- for entry in site.social_links -%}
           <a class="nav-item" title="{{ entry.social }}" href="{{ entry.user_url }}" target="_blank">
-            <i class="{{ entry.icon }}"></i>
+            {%- if entry.text -%}
+              <div style="padding-top: 4px;">{{ entry.text }}</div>
+            {%- endif -%}
+
+            {%- if entry.icon -%}
+              <i class="{{ entry.icon }}"></i>
+            {%- endif -%}
           </a>
         {%- endfor -%}
 
         <!-- 
-        <div class="nav-item">
+          <div class="nav-item">
           <a href="#" id="lang-toggle">PT</a>
-        </div>
+          </div>
 
-        <div class="nav-item">
+          <div class="nav-item">
           <a href="#" id="theme-toggle">🌙</a>
-        </div>
+          </div>
         -->
 
       </div>
