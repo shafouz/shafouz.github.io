@@ -1,5 +1,6 @@
 #!/bin/env python3
 
+import dotenv
 import subprocess
 from time import sleep
 from concurrent.futures import ThreadPoolExecutor
@@ -20,8 +21,11 @@ def sync():
 
 
 def run():
+    ENV = (dotenv.get_key(dotenv_path=".env", key_to_get="ENV"),)
+    HTB_TOKEN = (dotenv.get_key(dotenv_path=".env", key_to_get="HTB_TOKEN"),)
+
     subprocess.run(
-        "bundle exec jekyll server baseurl='' --drafts --force_polling -w --limit_posts 3",
+        f"ENV='{ENV}' HTB_TOKEN='{HTB_TOKEN}' bundle exec jekyll server baseurl='' --drafts --force_polling -w --limit_posts 10",
         shell=True,
     )
 
