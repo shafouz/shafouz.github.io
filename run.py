@@ -22,18 +22,17 @@ def sync():
         sleep(5)
 
 
-def run(no_drafts, env):
-    ENV = (dotenv.get_key(dotenv_path=".env", key_to_get="ENV"),)
-    cmd = f"ENV='{ENV}' bundle exec jekyll server baseurl='' --force_polling -w --limit_posts 10"
+def run(posts, no_drafts, env):
+    cmd = f"ENV='{env}' bundle exec jekyll server baseurl='' --force_polling -w --limit_posts {posts}"
 
     if env == "prod":
-        HTB_TOKEN = (dotenv.get_key(dotenv_path=".env", key_to_get="HTB_TOKEN"),)
+        HTB_TOKEN = dotenv.get_key(dotenv_path=".env", key_to_get="HTB_TOKEN")
         cmd = f"HTB_TOKEN='{HTB_TOKEN}' " + cmd
 
     if not no_drafts:
         cmd = cmd + " --drafts"
 
-    print("bundle", cmd.split(" bundle")[1])
+    print(cmd)
     subprocess.run(
         cmd,
         shell=True,
@@ -46,10 +45,10 @@ with ThreadPoolExecutor() as executor:
     )
 
     parser.add_argument("--env", "-e", choices=["dev", "prod"], default="dev")
-
+    parser.add_argument("--posts", "-p", default=1)
     parser.add_argument("--no-drafts", "-nd", action="store_true")
 
     args = parser.parse_args()
 
     executor.submit(sync)
-    executor.submit(run, args.no_drafts, args.env)
+    executor.submit(run, args.posts, args.no_drafts, args.env)
