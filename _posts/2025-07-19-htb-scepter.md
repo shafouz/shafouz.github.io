@@ -4,7 +4,7 @@ title: HTB - scepter
 date: 2025-07-19 08:47 -0400
 ---
 
-| {{ 'scepter' | machine_img }} | . |
+| {{ 'scepter' | machine_img }} | Hard windows machine, starts with some certificates leaked from a nfs mount. After bruteforcing the key we get the d.baker user. Then after that we have to exploit ESC14 twice. |
 
 # nmap
 ```bash
@@ -207,7 +207,7 @@ So we have `GenericAll` on the OU. That means we can change the ACE and get cont
 <a id="back"></a>
 {% endraw %}
 
-Checking certipy there is a `StaffAccessCertificate` template that is vulnerable to [ESC9](https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc9-no-security-extension-on-certificate-template).
+Checking certipy there is a `StaffAccessCertificate` template that is vulnerable to [ESC9](https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc9-no-security-extension-on-certificate-template). But if you try and follow it the exploitation steps, it won't work. At the end there is an [explanation](#esc14) of why this happens. 
 
 ```bash
 1
@@ -220,8 +220,6 @@ Checking certipy there is a `StaffAccessCertificate` template that is vulnerable
     [*] Remarks
       ESC9                              : Other prerequisites may be required for this to be exploitable. See the wiki for more details.
 ```
-
-At the end there is an explanation of why this only works on `h.brown`. [Explanation](#esc9).
 
 Here is the full solution script:
 ```bash
@@ -329,15 +327,15 @@ f4fc0***************************
 
 ---
 
-# [ESC9](#back)
+# [ESC14](#back)
 
-If you try and use ESC9 as is in the certipy wiki it won't work. The reason for that is that the certificate generated doesn't have a otherName field on the certificate SAN (Subject Alternate Name). 
+If you try and follow the steps for ESC9 from the certipy wiki it won't work. The reason for that is that the certificate generated doesn't have a otherName field on the certificate SAN (Subject Alternate Name). 
 
 This is explained pretty well [here](https://www.thehacker.recipes/ad/movement/adcs/certificate-templates).
 
-Basically when the `StrongCertificateBindingEnforcement` registry key is set to 1 it checks `altSecurityIdentities` (explicit mapping) and if it is not present it checks SAN otherName field (implicit mapping).
+Basically, when the `StrongCertificateBindingEnforcement` registry key is set to 1, it checks `altSecurityIdentities` (explicit mapping), and if it is not present, it checks the SAN otherName field (implicit mapping).
 
-We can see the flag value on powershell:
+We can see that the flag is set to 1 with powershell:
 ```bash
 *Evil-WinRM* PS C:\Users\h.brown\Documents> reg query "HKLM\SYSTEM\CurrentControlSet\Services\Kdc" /v StrongCertificateBindingEnforcement
 
@@ -345,9 +343,9 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Kdc
     StrongCertificateBindingEnforcement    REG_DWORD    0x1
 ```
 
-Since the StaffAccessCertificate template doesn't add the `othername` field to the certificate it will always fail. Adding the `CT_FLAG_SUBJECT_ALT_REQUIRE_UPN` flag to the template makes so it does include the field. I am unsure if any other flags do that.
+Since the `StaffAccessCertificate` template doesn't add the `othername` field to the certificate it will always fail. Adding the `CT_FLAG_SUBJECT_ALT_REQUIRE_UPN` flag to the template makes so it does include the field. I am unsure if any other flags do that.
 
-Diffing the certificate of the Certified box shows the difference:
+Diffing the certificate from this box with the one on the Certified box, which uses ESC9 on the root part, shows the difference:
 ```diff
 +           X509v3 Subject Alternative Name:
 +               email:h.brown@scepter.htb
