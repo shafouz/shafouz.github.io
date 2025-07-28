@@ -4,7 +4,7 @@ title: HTB - cypher
 date: 2025-07-25 17:18 -0400
 ---
 
-| {{ 'cypher' | machine_img }} | Medium linux box. Starts with a cypher injection on neo4j. Then we escalete using a custom db procedure. After that there is a password leak on `~/.bash_history`. Ending by abusing a feature from a bug bouny tool to get to root. |
+| {{ 'cypher' | machine_img }} | Medium linux box. Starts with a cypher injection on neo4j. Then we escalete using a custom db procedure. After that there is a password leak on `~/.bash_history`. Ending by abusing a feature from a bug bounty tool to get to root. |
 
 ## nmap
 shows just 2 ports:
