@@ -4,7 +4,7 @@ title: HTB - TheFrizz
 date: 2025-08-23 14:40 -0400
 ---
 
-| {{ 'TheFrizz' | machine_img }} | Medium windows machine. Starts by abusing a LFI on Gibbon-LMS. Then we recover a backup from the RecycleBin. Some password reuse. And we escalate with SharpGPOAbuse. |
+| {{ 'thefrizz' | machine_img }} | Medium windows machine. Starts by abusing a LFI on Gibbon-LMS. Then we recover a backup from the RecycleBin. Some password reuse. And we escalate with SharpGPOAbuse. |
 
 # nmap
 ```bash
